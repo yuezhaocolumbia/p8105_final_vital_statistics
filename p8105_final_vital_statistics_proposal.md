@@ -33,23 +33,29 @@ We will determine the top ten causes of death in New York and make stratified an
 
 #### The anticipated data sources
 
-Data is from the nyc department of health. Two datasets will mainly be used, which are the birth micro SAS Datasets \[Year(s)\] and death micro SAS Datasets \[Year(s)\] from National Vital Statistics System. Time period is from 2000 to 2014.
+Data is from the nyc department of health.
+
+Two datasets will mainly be used, which are the birth micro SAS Datasets \[Year(s)\] and death micro SAS Datasets \[Year(s)\] from National Vital Statistics System. Time period is from 2000 to 2014.
 
 <br>
 
 #### The planned analyses / visualizations / coding challenges
 
-We will use R to make our data analysis. We will analyze the time trend with vital statistics data in each neighbourhood and also analyse on the disease specific data (ie. pancreatic cancer) to explore the factors that are associated with deaths or birth deficits. Visualizations will be mainly delivered by ggplot, which contains spaghetti plot, histogram, scatterplot, boxplot and so on. Coding Challenges might be the statistical tests using R.
+We will use R to make our data analysis. We will analyze the time trend with vital statistics data in each neighbourhood and also analyse on the disease specific data (ie. pancreatic cancer) to explore the factors that are associated with deaths or birth deficits.
+
+Visualizations will be mainly delivered by ggplot, which contains spaghetti plot, histogram, scatterplot, boxplot and so on.
+
+Coding Challenges might be the statistical tests using R.
 
 <br>
 
 #### The planned timeline
 
-<table>
+<table style="width:100%;">
 <colgroup>
-<col width="12%" />
-<col width="27%" />
-<col width="59%" />
+<col width="15%" />
+<col width="26%" />
+<col width="57%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -67,39 +73,34 @@ We will use R to make our data analysis. We will analyze the time trend with vit
 <tr class="even">
 <td>November 12</td>
 <td>Import and tidy data</td>
-<td>Github Knit</td>
+<td>Written relative RMD</td>
 </tr>
 <tr class="odd">
 <td>November 16</td>
 <td>Descriptive statistics</td>
-<td>Github Knit</td>
+<td>Written relative RMD</td>
 </tr>
 <tr class="even">
 <td>November 20</td>
 <td>Descriptive statistics</td>
-<td>Github Knit</td>
+<td>Written relative RMD</td>
 </tr>
 <tr class="odd">
 <td>November 28</td>
 <td>Make plots</td>
-<td>Github Knit</td>
+<td>Written relative RMD</td>
 </tr>
 <tr class="even">
 <td>December 1</td>
 <td>Linear Regression</td>
-<td>Github Knit</td>
+<td>Written relative RMD</td>
 </tr>
 <tr class="odd">
-<td>December 1</td>
-<td>Linear Regression</td>
-<td>Github Knit</td>
-</tr>
-<tr class="even">
-<td>December 6</td>
+<td>December 4</td>
 <td>Report</td>
 <td>Written report giving detailed project description (as a GitHub repo)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>December 6</td>
 <td>Webpage and screencast</td>
 <td>Webpage overview of project, with short explanatory video (published online)</td>

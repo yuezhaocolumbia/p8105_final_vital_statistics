@@ -31,13 +31,17 @@ We will determine the top ten causes of death in New York and make stratified an
 <br>
 
 ####The anticipated data sources
-Data is from the nyc department of health. Two datasets will mainly be used, which are the birth micro SAS Datasets [Year(s)] and death micro SAS Datasets [Year(s)] from National Vital Statistics System. Time period is from 2000 to 2014.
+Data is from the nyc department of health. 
+
+Two datasets will mainly be used, which are the birth micro SAS Datasets [Year(s)] and death micro SAS Datasets [Year(s)] from National Vital Statistics System. Time period is from 2000 to 2014.
 
 <br>
 
 ####The planned analyses / visualizations / coding challenges
 We will use R to make our data analysis. We will analyze the time trend with vital statistics data in each neighbourhood and also  analyse on the disease specific data (ie. pancreatic cancer) to explore the factors that are associated with deaths or birth deficits.
+
 Visualizations will be mainly delivered by ggplot, which contains spaghetti plot, histogram, scatterplot, boxplot and so on.
+
 Coding Challenges might be the statistical tests using R.  
 
 <br>
@@ -46,14 +50,13 @@ Coding Challenges might be the statistical tests using R.
 
 
 Date  | Description | Deliverable
-------------- | ------------------------------ |-----------------------------------------------------------------
+----------------- | ------------------------------ |-----------------------------------------------------------------
 November 8  | Form a team and submit a proposal  |Written proposal document
-November 12 | Import and tidy data       |Github Knit 
-November 16 | Descriptive statistics       |Github Knit 
-November 20 | Descriptive statistics       |Github Knit 
-November 28 | Make plots       |Github Knit 
-December 1 | Linear Regression       |Github Knit 
-December 1 | Linear Regression       |Github Knit 
-December 6 | Report       |Written report giving detailed project description (as a GitHub repo)
+November 12 | Import and tidy data       |Written relative RMD 
+November 16 | Descriptive statistics       |Written relative RMD
+November 20 | Descriptive statistics       |Written relative RMD 
+November 28 | Make plots       |Written relative RMD
+December 1 | Linear Regression       |Written relative RMD 
+December 4 | Report       |Written report giving detailed project description (as a GitHub repo)
 December 6 | Webpage and screencast       |Webpage overview of project, with short explanatory video (published online)
  
