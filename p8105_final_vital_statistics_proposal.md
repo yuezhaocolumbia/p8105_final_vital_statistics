@@ -92,7 +92,7 @@ Coding Challenges might be the statistical tests using R.
 </tr>
 <tr class="even">
 <td>December 1</td>
-<td>Linear Regression</td>
+<td>Regression</td>
 <td>Written relative RMD</td>
 </tr>
 <tr class="odd">
