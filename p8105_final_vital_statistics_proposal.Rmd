@@ -62,7 +62,7 @@ November 12 | Import and tidy data       |Written relative RMD
 November 16 | Descriptive statistics       |Written relative RMD
 November 20 | Descriptive statistics       |Written relative RMD 
 November 28 | Make plots       |Written relative RMD
-December 1 | Linear Regression       |Written relative RMD 
+December 1 |  Regression       |Written relative RMD 
 December 4 | Report       |Written report giving detailed project description (as a GitHub repo)
 December 6 | Webpage and screencast       |Webpage overview of project, with short explanatory video (published online)
  
