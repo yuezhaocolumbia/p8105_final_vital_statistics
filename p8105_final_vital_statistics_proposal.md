@@ -4,12 +4,12 @@ Proposal
 
 #### The group members (names and UNIs)
 
-| Name           | UNI    |
-|----------------|--------|
-| Yue Zhao       | yz3297 |
-| Xue Yang       | xy2397 |
-| Yi Xiao        | yx2510 |
-| Kangkang Zhang | kz2334 |
+| Name           | UNI    | Work       |
+|----------------|--------|------------|
+| Yue Zhao       | yz3297 | Death data |
+| Xue Yang       | xy2397 | Birth data |
+| Yi Xiao        | yx2510 | Death data |
+| Kangkang Zhang | kz2334 | Birth Data |
 
 <br>
 
@@ -21,13 +21,17 @@ Vital Statistics in New York - Saving Lives by Counting Deaths
 
 #### The motivation for this project
 
-Understanding the pattern of birth and death is of critical importance in identifying public health issue. In particular, maternal and infant mortality serve as key indicators of the overall health of society. In this study, we are interested in exploring the birth defects in the infants and cause of deaths in New York City. We will further investigate whether there are disparities among different age, ethnicity and sex groups.
+Understanding the pattern of birth and death is of critical importance in identifying public health issue. Knowing the causes of death, especially the avoidable ones, helps us to establish intervention for better outcomes. Difference in death rate, birth rate and cause of death among different groups can even indicate socioeconomic inequility. In this study, we are interested in the cause of deaths and birth rate in New York City. We will further investigate whether there are disparities among different age, ethnicity and sex groups.
 
 <br>
 
 #### The intended final products
 
-We will determine the top ten causes of death in New York and make stratified analysis to go in depth into the factors which were hidden in the data. Specifically, we will identify the leading causes of death by sex, race, age, place of origin/birth and borough of residence and explore whether there is a socioeconomic disparity in terms of premature death and infant mortality/defect （whether statistics differs between low-income area and high-income area). We could also examine changes in the makeup of leading causes of death during the last decade. We are also intended to take a look at the birth defect data to investigate the main causes of birth defect, the ratio of birth defect leading to infant mortality and we will also explore relationships between maternal factors and infant factors in the birth defect cases.
+We plan to have a report, website, screenshot as final product which cover those problems:
+
+We will determine the top ten causes of death in New York City and make stratified analysis to go in depth into the factors which were hidden in the data. Specifically, we will identify the top causes of death by sex, race, age, place of origin/birth and borough of residence and explore whether there is a socioeconomic disparity in terms of life expectancy, mortality rate as well as premature death rate. To this end, we could stratify New York Borough into different poverty category according to American Community Survey and examine whether major indexes differ among those boroughs. We are also interested in changes in the makeup of leading causes of death during the last decade.
+
+As to the birth data, we would like to know the birth rate in New York by race, place of origin and borough and we would also plot the time trend of birth rate over the last ten years. Birth defect is also one of our interests. By exploring the dataset, we'd like to know whether a certain kind of birth defect is linked with certain maternal characteristics.
 
 <br>
 
@@ -35,7 +39,7 @@ We will determine the top ten causes of death in New York and make stratified an
 
 Data is from the nyc department of health.
 
-Two datasets will mainly be used, which are the birth micro SAS Datasets \[Year(s)\] and death micro SAS Datasets \[Year(s)\] from National Vital Statistics System. Time period is from 2000 to 2014.
+Datasets that will be used in this project are, but not limited to, the birth micro SAS Datasets \[Year(s)\] and death micro SAS Datasets \[Year(s)\] from National Vital Statistics System (time period is from 2000 to 2014). American Community Survey can be refered to for poverty data.
 
 <br>
 
