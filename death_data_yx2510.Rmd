@@ -1,0 +1,38 @@
+---
+title: "Yx2510"
+author: "Yi Xiao"
+date: "25/11/2018"
+output: html_document
+---
+```{r}
+library(haven)
+library(dplyr)
+library(tidyverse)
+
+```
+
+```{r import data}
+#import death data from 2010 to 2014
+name = list.files(path = "./data", full.names = TRUE, pattern = "*.sas7bdat") 
+cd_data =  map_df(name, read_sas)  %>%
+  janitor::clean_names()
+year = as.data.frame(rep(2010:2014, each = 59)) 
+
+# add a column "year"
+cd_data = cbind(year, cd_data) 
+colnames(cd_data)[1] = "year"
+
+# import population data
+pop_data2 = read_csv("./data/New_York_City_Population_By_Community_Districts2.csv") %>%
+ janitor::clean_names() %>%
+  select(borough, cd_number, cd_name, x2000_population, x2010_population)
+
+my_data = merge(pop_data2, cd_data, by.x = "cd_name", by.y = "community_district")
+
+```
+
+```{r tidy dataset}
+ my_data %>%
+  gather
+```
+
