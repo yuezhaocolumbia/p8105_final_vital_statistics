@@ -8,6 +8,8 @@ output: html_document
 library(haven)
 library(dplyr)
 library(tidyverse)
+library(stringi)
+
 
 ```
 
@@ -41,10 +43,49 @@ my_tidy_data = my_data %>% # we'll use 2000 year population data for 2000 - 2009
     
 ```
 
-The generated dataset consists of `r nrow(my_tidy_data)` observations  and `r ncol(my_tidy_data)` columns. Each observation records information on population and death statistics in one of `r n_distinct(my_tidy_data$cd_name)` community districts in New York City. Variables in the original dataset include sex, age, ethnicity and cause of death and their cross variable with each other. Since we are interested in cause of death in this project, we only kept cause of death and its cross information with other demographic variables. 
+The generated dataset consists of `r nrow(my_tidy_data)` observations  and `r ncol(my_tidy_data)` columns. Each observation records information on population and death statistics in one of `r n_distinct(my_tidy_data$cd_name)` community districts in New York City. Variables in the original dataset include sex, age, ethnicity and cause of death and their cross variable with each other. Since we are interested in cause of death in this project, we only kept cause of death and its cross information with other demographic variables. Noteworthily, the presence of a large proportion of NAs could be an issue in later steps.
 
 Cause of death is denoted with c1 to c22, which represent Deaths due to septicemia, Deaths due to HIV, Deaths due to malignant neoplasms (cancer), Deaths due to cancer of the colon, rectum, and anus, Deaths due to cancer of the pancreas, Deaths due to trachea, bronchus, and lung, Deaths due to cancer of the breast (female), Deaths due to cancer of the prostate, Deaths due to diabetes mellitus, Deaths due to use of or poisoning by psychoactive substance excluding alcohol and tobacco, Deaths due to Alzheimer's disease, Deaths due to diseases of the heart, Deaths due to essential hypertension and hypertensive renal disease, Deaths due to cerebrovascular diseases, Deaths due to influenza and pneumonia, Deaths due to chronic lower respiratory diseases, Deaths due to chronic liver disease and cirrhosis, Deaths due to Nephritis, Nephrotic Syndrome and Nephrosis, Deaths due to accident except drug poisoning, Deaths due to intentional self‐harm (suicide), Deaths due to assault (homicide), respectively. 
 
 Race/ethnicity is denoted with 1 to 5, standing for Hispanic, Asian Non‐Hispanic, White Non‐Hispanic, Black Non‐Hispanic respectively.
 
+```{r split our dataset into several subsets}
+# we are first dealing with death infomation without accounting for other demographic characteristics
+total_death_data = my_tidy_data %>%
+  select(cd_name: x22, population) %>%
+  gather(key = "cause_of_death", value = number, x1:x22)
 
+# cause of death crossed with gender
+gender_death_data = my_tidy_data %>%
+   select(cd_name : year, c1male :c22female, population) %>%
+   gather (key = "cause_of_death", value = "number", c1male : c22female) 
+gender_death_data = gender_death_data %>%
+   mutate(gender = ifelse(str_detect(gender_death_data$cause_of_death, "male"), "male", "female")) %>%
+   mutate(cause_of_death = str_replace(cause_of_death, cause_of_death, substr(gender_death_data$cause_of_death, 1, 2) ))
+
+# cause of death crossed with age 
+age_death_data = my_tidy_data %>%
+select(cd_name: year, c1age_1_12months:c22age_85, population) %>%
+  gather (key = "cause_of_death", value = "number", c1age_1_12months : c22age_85) 
+age_death_data = age_death_data %>% 
+  mutate(
+    age_group = 
+      substr(age_death_data$cause_of_death, str_locate(age_death_data$cause_of_death, "age")[,1] + 4, length(age_death_data$cause_of_death))
+    ) %>%
+  mutate(cause_of_death = str_replace(cause_of_death, cause_of_death, substr(gender_death_data$cause_of_death, 0, (str_locate(age_death_data$cause_of_death, "age")[,1] -1))))
+
+# cause of death crossed with race 
+race_death_data = my_tidy_data %>%
+   select(cd_name: year, c11:c225, population) %>%
+     gather (key = "cause_of_death", value = "number", c11:c225) 
+
+race_death_data = race_death_data %>% 
+  mutate(race = stri_sub(race_death_data$cause_of_death, -1)) %>%
+  mutate(
+    cause_of_death = 
+      str_replace(cause_of_death, cause_of_death, substr(race_death_data$cause_of_death, 1, length(race_death_data$cause_of_death)-3)
+                  ))
+   
+```
+
+I split the dataset into 4 subsets. 

@@ -130,7 +130,8 @@ $(document).ready(function () {
 
 <pre class="r"><code>library(haven)
 library(dplyr)
-library(tidyverse)</code></pre>
+library(tidyverse)
+library(stringi)</code></pre>
 <pre class="r"><code>#import death data from 2004 to 2014
 name = list.files(path = &quot;./data&quot;, full.names = TRUE, pattern = &quot;*.sas7bdat&quot;) 
 cd_data =  map_df(name, read_sas)  %&gt;%
@@ -157,9 +158,47 @@ my_tidy_data = my_data %&gt;% # we'll use 2000 year population data for 2000 - 2
   mutate(cd_name = as.factor(cd_name),
          year = as.factor(year)) %&gt;%
   select(c(cd_name:year, x1:population))</code></pre>
-<p>The generated dataset consists of 627 observations and 585 columns. Each observation records information on population and death statistics in one of 57 community districts in New York City. Variables in the original dataset include sex, age, ethnicity and cause of death and their cross variable with each other. Since we are interested in cause of death in this project, we only kept cause of death and its cross information with other demographic variables.</p>
+<p>The generated dataset consists of 627 observations and 585 columns. Each observation records information on population and death statistics in one of 57 community districts in New York City. Variables in the original dataset include sex, age, ethnicity and cause of death and their cross variable with each other. Since we are interested in cause of death in this project, we only kept cause of death and its cross information with other demographic variables. Noteworthily, the presence of a large proportion of NAs could be an issue in later steps.</p>
 <p>Cause of death is denoted with c1 to c22, which represent Deaths due to septicemia, Deaths due to HIV, Deaths due to malignant neoplasms (cancer), Deaths due to cancer of the colon, rectum, and anus, Deaths due to cancer of the pancreas, Deaths due to trachea, bronchus, and lung, Deaths due to cancer of the breast (female), Deaths due to cancer of the prostate, Deaths due to diabetes mellitus, Deaths due to use of or poisoning by psychoactive substance excluding alcohol and tobacco, Deaths due to Alzheimer’s disease, Deaths due to diseases of the heart, Deaths due to essential hypertension and hypertensive renal disease, Deaths due to cerebrovascular diseases, Deaths due to influenza and pneumonia, Deaths due to chronic lower respiratory diseases, Deaths due to chronic liver disease and cirrhosis, Deaths due to Nephritis, Nephrotic Syndrome and Nephrosis, Deaths due to accident except drug poisoning, Deaths due to intentional self‐harm (suicide), Deaths due to assault (homicide), respectively.</p>
 <p>Race/ethnicity is denoted with 1 to 5, standing for Hispanic, Asian Non‐Hispanic, White Non‐Hispanic, Black Non‐Hispanic respectively.</p>
+<pre class="r"><code># we are first dealing with death infomation without accounting for other demographic characteristics
+total_death_data = my_tidy_data %&gt;%
+  select(cd_name: x22, population) %&gt;%
+  gather(key = &quot;cause_of_death&quot;, value = number, x1:x22)
+
+# cause of death crossed with gender
+gender_death_data = my_tidy_data %&gt;%
+   select(cd_name : year, c1male :c22female, population) %&gt;%
+   gather (key = &quot;cause_of_death&quot;, value = &quot;number&quot;, c1male : c22female) 
+gender_death_data = gender_death_data %&gt;%
+   mutate(gender = ifelse(str_detect(gender_death_data$cause_of_death, &quot;male&quot;), &quot;male&quot;, &quot;female&quot;)) %&gt;%
+   mutate(cause_of_death = str_replace(cause_of_death, cause_of_death, substr(gender_death_data$cause_of_death, 1, 2) ))
+
+# cause of death crossed with age 
+age_death_data = my_tidy_data %&gt;%
+select(cd_name: year, c1age_1_12months:c22age_85, population) %&gt;%
+  gather (key = &quot;cause_of_death&quot;, value = &quot;number&quot;, c1age_1_12months : c22age_85) 
+age_death_data = age_death_data %&gt;% 
+  mutate(
+    age_group = 
+      substr(age_death_data$cause_of_death, str_locate(age_death_data$cause_of_death, &quot;age&quot;)[,1] + 4, length(age_death_data$cause_of_death))
+    ) %&gt;%
+  mutate(cause_of_death = str_replace(cause_of_death, cause_of_death, substr(gender_death_data$cause_of_death, 0, (str_locate(age_death_data$cause_of_death, &quot;age&quot;)[,1] -1))))</code></pre>
+<pre><code>## Warning in stri_replace_first_regex(string, pattern,
+## fix_replacement(replacement), : longer object length is not a multiple of
+## shorter object length</code></pre>
+<pre class="r"><code># cause of death crossed with race 
+race_death_data = my_tidy_data %&gt;%
+   select(cd_name: year, c11:c225, population) %&gt;%
+     gather (key = &quot;cause_of_death&quot;, value = &quot;number&quot;, c11:c225) 
+
+race_death_data = race_death_data %&gt;% 
+  mutate(race = stri_sub(race_death_data$cause_of_death, -1)) %&gt;%
+  mutate(
+    cause_of_death = 
+      str_replace(cause_of_death, cause_of_death, substr(race_death_data$cause_of_death, 1, length(race_death_data$cause_of_death)-3)
+                  ))</code></pre>
+<p>I split the dataset into 4 subsets.</p>
 
 
 
