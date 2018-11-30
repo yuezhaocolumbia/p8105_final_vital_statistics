@@ -129,29 +129,13 @@ $(document).ready(function () {
 
 
 <pre class="r"><code>library(haven)
-library(dplyr)</code></pre>
-<pre><code>## 
-## Attaching package: 'dplyr'</code></pre>
-<pre><code>## The following objects are masked from 'package:stats':
-## 
-##     filter, lag</code></pre>
-<pre><code>## The following objects are masked from 'package:base':
-## 
-##     intersect, setdiff, setequal, union</code></pre>
-<pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>## ── Attaching packages ─────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
-<pre><code>## ✔ ggplot2 3.0.0     ✔ readr   1.1.1
-## ✔ tibble  1.4.2     ✔ purrr   0.2.5
-## ✔ tidyr   0.8.1     ✔ stringr 1.3.1
-## ✔ ggplot2 3.0.0     ✔ forcats 0.3.0</code></pre>
-<pre><code>## ── Conflicts ────────────────────────────────────────────────── tidyverse_conflicts() ──
-## ✖ dplyr::filter() masks stats::filter()
-## ✖ dplyr::lag()    masks stats::lag()</code></pre>
-<pre class="r"><code>#import death data from 2010 to 2014
+library(dplyr)
+library(tidyverse)</code></pre>
+<pre class="r"><code>#import death data from 2004 to 2014
 name = list.files(path = &quot;./data&quot;, full.names = TRUE, pattern = &quot;*.sas7bdat&quot;) 
 cd_data =  map_df(name, read_sas)  %&gt;%
   janitor::clean_names()
-year = as.data.frame(rep(2010:2014, each = 59)) 
+year = as.data.frame(rep(2004:2014, each = 59)) 
 
 # add a column &quot;year&quot;
 cd_data = cbind(year, cd_data) 
@@ -160,19 +144,22 @@ colnames(cd_data)[1] = &quot;year&quot;
 # import population data
 pop_data2 = read_csv(&quot;./data/New_York_City_Population_By_Community_Districts2.csv&quot;) %&gt;%
  janitor::clean_names() %&gt;%
-  select(borough, cd_number, cd_name, x2000_population, x2010_population)</code></pre>
-<pre><code>## Parsed with column specification:
-## cols(
-##   Borough = col_character(),
-##   `CD Number` = col_integer(),
-##   `CD Name` = col_character(),
-##   `1970 Population` = col_integer(),
-##   `1980 Population` = col_integer(),
-##   `1990 Population` = col_integer(),
-##   `2000 Population` = col_integer(),
-##   `2010 Population` = col_integer()
-## )</code></pre>
-<pre class="r"><code>my_data = merge(pop_data2, cd_data, by.x = &quot;cd_name&quot;, by.y = &quot;community_district&quot;)</code></pre>
+  select(borough, cd_name, x2000_population, x2010_population)
+  
+# merge the two datasets
+my_data = merge(pop_data2, cd_data, by.x = &quot;cd_name&quot;, by.y = &quot;community_district&quot;) %&gt;%
+  arrange(cd_name, borough, year) 
+ 
+my_tidy_data = my_data %&gt;% # we'll use 2000 year population data for 2000 - 2009, and 2010 year data for 2010 -2014 
+  rowwise() %&gt;%
+  mutate(population = ifelse(year &lt; 2010, my_data$x2000_population, my_data$x2010_population)) %&gt;%
+  select(-c(x2000_population, x2010_population)) %&gt;% 
+  mutate(cd_name = as.factor(cd_name),
+         year = as.factor(year)) %&gt;%
+  select(c(cd_name:year, x1:population))</code></pre>
+<p>The generated dataset consists of 627 observations and 585 columns. Each observation records information on population and death statistics in one of 57 community districts in New York City. Variables in the original dataset include sex, age, ethnicity and cause of death and their cross variable with each other. Since we are interested in cause of death in this project, we only kept cause of death and its cross information with other demographic variables.</p>
+<p>Cause of death is denoted with c1 to c22, which represent Deaths due to septicemia, Deaths due to HIV, Deaths due to malignant neoplasms (cancer), Deaths due to cancer of the colon, rectum, and anus, Deaths due to cancer of the pancreas, Deaths due to trachea, bronchus, and lung, Deaths due to cancer of the breast (female), Deaths due to cancer of the prostate, Deaths due to diabetes mellitus, Deaths due to use of or poisoning by psychoactive substance excluding alcohol and tobacco, Deaths due to Alzheimer’s disease, Deaths due to diseases of the heart, Deaths due to essential hypertension and hypertensive renal disease, Deaths due to cerebrovascular diseases, Deaths due to influenza and pneumonia, Deaths due to chronic lower respiratory diseases, Deaths due to chronic liver disease and cirrhosis, Deaths due to Nephritis, Nephrotic Syndrome and Nephrosis, Deaths due to accident except drug poisoning, Deaths due to intentional self‐harm (suicide), Deaths due to assault (homicide), respectively.</p>
+<p>Race/ethnicity is denoted with 1 to 5, standing for Hispanic, Asian Non‐Hispanic, White Non‐Hispanic, Black Non‐Hispanic respectively.</p>
 
 
 

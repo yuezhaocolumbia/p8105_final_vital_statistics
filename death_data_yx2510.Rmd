@@ -4,19 +4,19 @@ author: "Yi Xiao"
 date: "25/11/2018"
 output: html_document
 ---
-```{r}
+```{r, message = FALSE}
 library(haven)
 library(dplyr)
 library(tidyverse)
 
 ```
 
-```{r import data}
-#import death data from 2010 to 2014
+```{r import data, message = FALSE, warning = FALSE}
+#import death data from 2004 to 2014
 name = list.files(path = "./data", full.names = TRUE, pattern = "*.sas7bdat") 
 cd_data =  map_df(name, read_sas)  %>%
   janitor::clean_names()
-year = as.data.frame(rep(2010:2014, each = 59)) 
+year = as.data.frame(rep(2004:2014, each = 59)) 
 
 # add a column "year"
 cd_data = cbind(year, cd_data) 
@@ -25,13 +25,26 @@ colnames(cd_data)[1] = "year"
 # import population data
 pop_data2 = read_csv("./data/New_York_City_Population_By_Community_Districts2.csv") %>%
  janitor::clean_names() %>%
-  select(borough, cd_number, cd_name, x2000_population, x2010_population)
-
-my_data = merge(pop_data2, cd_data, by.x = "cd_name", by.y = "community_district")
-
+  select(borough, cd_name, x2000_population, x2010_population)
+  
+# merge the two datasets
+my_data = merge(pop_data2, cd_data, by.x = "cd_name", by.y = "community_district") %>%
+  arrange(cd_name, borough, year) 
+ 
+my_tidy_data = my_data %>% # we'll use 2000 year population data for 2000 - 2009, and 2010 year data for 2010 -2014 
+  rowwise() %>%
+  mutate(population = ifelse(year < 2010, my_data$x2000_population, my_data$x2010_population)) %>%
+  select(-c(x2000_population, x2010_population)) %>% 
+  mutate(cd_name = as.factor(cd_name),
+         year = as.factor(year)) %>%
+  select(c(cd_name:year, x1:population))
+    
 ```
 
-```{r tidy dataset}
+The generated dataset consists of `r nrow(my_tidy_data)` observations  and `r ncol(my_tidy_data)` columns. Each observation records information on population and death statistics in one of `r n_distinct(my_tidy_data$cd_name)` community districts in New York City. Variables in the original dataset include sex, age, ethnicity and cause of death and their cross variable with each other. Since we are interested in cause of death in this project, we only kept cause of death and its cross information with other demographic variables. 
 
-```
+Cause of death is denoted with c1 to c22, which represent Deaths due to septicemia, Deaths due to HIV, Deaths due to malignant neoplasms (cancer), Deaths due to cancer of the colon, rectum, and anus, Deaths due to cancer of the pancreas, Deaths due to trachea, bronchus, and lung, Deaths due to cancer of the breast (female), Deaths due to cancer of the prostate, Deaths due to diabetes mellitus, Deaths due to use of or poisoning by psychoactive substance excluding alcohol and tobacco, Deaths due to Alzheimer's disease, Deaths due to diseases of the heart, Deaths due to essential hypertension and hypertensive renal disease, Deaths due to cerebrovascular diseases, Deaths due to influenza and pneumonia, Deaths due to chronic lower respiratory diseases, Deaths due to chronic liver disease and cirrhosis, Deaths due to Nephritis, Nephrotic Syndrome and Nephrosis, Deaths due to accident except drug poisoning, Deaths due to intentional self‐harm (suicide), Deaths due to assault (homicide), respectively. 
+
+Race/ethnicity is denoted with 1 to 5, standing for Hispanic, Asian Non‐Hispanic, White Non‐Hispanic, Black Non‐Hispanic respectively.
+
 
