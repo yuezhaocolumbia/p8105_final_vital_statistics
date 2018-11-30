@@ -32,7 +32,6 @@ my_data = merge(pop_data2, cd_data, by.x = "cd_name", by.y = "community_district
 ```
 
 ```{r tidy dataset}
- my_data %>%
-  gather
+
 ```
 
