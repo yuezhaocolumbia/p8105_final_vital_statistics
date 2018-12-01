@@ -51,9 +51,36 @@ my_tidy_data = my_data %>% # we'll use 2000 year population data for 2000 - 2009
 
 The generated dataset consists of `r nrow(my_tidy_data)` observations  and `r ncol(my_tidy_data)` columns. Each observation records information on population and death statistics in one of `r n_distinct(my_tidy_data$cd_name)` community districts in New York City. Variables in the original dataset include sex, age, ethnicity and cause of death and their cross variable with each other. Since we are interested in cause of death in this project, we only kept cause of death and its cross information with other demographic variables. Noteworthily, the presence of a large proportion of NAs could be an issue in later steps.
 
-Cause of death is denoted with c1 to c22, which represent Deaths due to septicemia, Deaths due to HIV, Deaths due to malignant neoplasms (cancer), Deaths due to cancer of the colon, rectum, and anus, Deaths due to cancer of the pancreas, Deaths due to trachea, bronchus, and lung, Deaths due to cancer of the breast (female), Deaths due to cancer of the prostate, Deaths due to diabetes mellitus, Deaths due to use of or poisoning by psychoactive substance excluding alcohol and tobacco, Deaths due to Alzheimer's disease, Deaths due to diseases of the heart, Deaths due to essential hypertension and hypertensive renal disease, Deaths due to cerebrovascular diseases, Deaths due to influenza and pneumonia, Deaths due to chronic lower respiratory diseases, Deaths due to chronic liver disease and cirrhosis, Deaths due to Nephritis, Nephrotic Syndrome and Nephrosis, Deaths due to accident except drug poisoning, Deaths due to intentional self‐harm (suicide), Deaths due to assault (homicide), respectively. 
+Cause of death is denoted with c1 to c22, which represent Deaths due to:
+1. septicemia,
+2. HIV, 
+3. malignant neoplasms (cancer),
+4. cancer of the colon, rectum, and anus,
+5. cancer of the pancreas, 
+6. trachea, bronchus, and lung, 
+7. cancer of the breast (female), 
+8. cancer of the prostate, 
+9. diabetes mellitus, 
+10. use of or poisoning by psychoactive substance excluding alcohol and tobacco,
+11. Alzheimer's disease, 
+12. diseases of the heart,
+13. essential hypertension and hypertensive renal disease,
+14. cerebrovascular diseases, 
+15. influenza and pneumonia,
+16. chronic lower respiratory diseases, 
+17. chronic liver disease and cirrhosis, 
+18. Nephritis, Nephrotic Syndrome and Nephrosis, 
+19. accident except drug poisoning, 
+20. intentional self‐harm (suicide), 
+21. assault (homicide), respectively. 
+22. others
 
-Race/ethnicity is denoted with 1 to 5, standing for Hispanic, Asian Non‐Hispanic, White Non‐Hispanic, Black Non‐Hispanic respectively.
+Race/ethnicity is denoted with 1 to 5, standing for: 
+1. Hispanic, 
+2. Asian Non‐Hispanic, 
+3. White Non‐Hispanic, 
+4. Black Non‐Hispanic,
+5. others
 
 # 2. tidy the data
 ```{r split our dataset into several subsets}
@@ -198,5 +225,25 @@ cd_death_map
 
 ```
 
+## 3. leading cause of death in each borough
+```{r}
+specific_death_rate = total_death_data %>%
+  group_by(borough, year, cause_of_death) %>%
+  summarise(cause_specific_death = sum(number, na.rm = TRUE), population = sum(population)) %>%
+  mutate(cause_specific_death_rate = cause_specific_death/population) %>%
+  group_by(borough, cause_of_death) %>%
+  summarise(mean_cs_death_rate = mean(cause_specific_death_rate)) %>%
+  arrange(borough, mean_cs_death_rate)
+  
+  
+specific_death_rate %>%
+  group_by(borough) %>%
+  top_n(n = 10, wt = mean_cs_death_rate) %>%
+  ggplot(aes(x = reorder(cause_of_death,mean_cs_death_rate), y = mean_cs_death_rate)) +
+  geom_bar(stat = "identity") +
+  facet_grid(.~ borough) +
+  theme(axis.text.x = element_text(angle=90, vjust=0.6))
+  
+```
 
 
