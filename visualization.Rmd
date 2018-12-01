@@ -4,16 +4,30 @@ author: "Yi Xiao"
 date: "30/11/2018"
 output: html_document
 ---
+
+```{r}
+library(haven)
+library(dplyr)
+library(tidyverse)
+library(stringi)
+library(ggplot2)
+library(ggmap)
+library(rgeos)
+library(maptools)
+library(geojsonio)
+library(viridis)
+```
+
 ```{r crude mortality rate}
 # 10-year average crude mortality rate in each community district in New York City
 cd_death_rate = total_death_data %>%
   group_by(borough, cd_name, year) %>%
-  arrange(borough,cd_name) %>%
-  summarise(total_cd_death = sum(number, na.rm = TRUE), population = mean(population)) %>%
+  summarise(total_cd_death = sum(number, na.rm = TRUE), population = mean(population), cd_number = mean(as.numeric(cd_number))) %>%
   mutate(motality_rate = total_cd_death/population) %>%
   group_by(cd_name, borough) %>%
-  summarise(average_death_rate = mean(motality_rate)) %>%
+  summarise(average_death_rate = mean(motality_rate), cd_number = mean(cd_number)) %>%
   arrange(desc(average_death_rate))
+
 
 cd_death_rate %>%
    ggplot(aes(x = reorder(cd_name,average_death_rate), y = average_death_rate, fill = borough)) +
@@ -57,5 +71,49 @@ year_death_rate %>%
   
 ```
 
+```{r add map}
+URL <- "http://services5.arcgis.com/GfwWNkhOj9bNBqoJ/arcgis/rest/services/nycd/FeatureServer/0/query?where=1=1&outFields=*&outSR=4326&f=geojson"
+fil <- "nyc_community_districts.geojson"
+if (!file.exists(fil)) download.file(URL, fil)
+
+nyc_districts = geojson_read(fil, what="sp")
+# nyc_districts@data =  merge(nyc_districts@data, cd_death_rate, by.x = "BoroCD", by.y = "cd_number")
+
+nyc_districts_map = fortify(nyc_districts, region="BoroCD")
+
+mids = cbind.data.frame(as.data.frame(gCentroid(nyc_districts, byid=TRUE)), 
+                         id=nyc_districts$BoroCD)
+
+ny_map = ggplot() %>% + 
+         geom_map(data=nyc_districts_map, map=nyc_districts_map,
+                    aes(x=long, y=lat, map_id=id),
+                    color="#2b2b2b", size=0.15, fill=NA) + 
+        geom_text(data=mids, aes(x=x, y=y, label=id), size=2) +
+        coord_map() + 
+        ggthemes::theme_map()
+
+
+ nyc_districts@data =  merge(nyc_districts@data, cd_death_rate, by.x = "BoroCD", by.y = "cd_number")
+
+choro = data.frame(district=nyc_districts@data$BoroCD,
+                    average_death_rate=nyc_districts@data$average_death_rate)
+
+cd_death_map = nyc_districts_map %>%
+ggplot()+
+geom_map(map=nyc_districts_map,
+                    aes(x=long, y=lat, map_id=id),
+                    color="#2b2b2b", size=0.15, fill=NA) +
+geom_map(data=choro, map=nyc_districts_map,
+                    aes(fill=average_death_rate, map_id=district),
+                    color="#2b2b2b", size=0.15) +
+scale_fill_viridis(name="Average death rate") + 
+coord_map() +
+ggthemes::theme_map() +
+theme(legend.position=c(0.1,0.5)) +
+   labs(title = "10-year average crude mortality rate in each community district in New York City"
+            )
+
+
+```
 
 

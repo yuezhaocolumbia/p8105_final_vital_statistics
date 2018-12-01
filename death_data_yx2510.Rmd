@@ -14,7 +14,7 @@ library(ggmap)
 library(rgeos)
 library(maptools)
 library(geojsonio)
-
+library(viridis)
 
 
 ```
@@ -33,7 +33,7 @@ colnames(cd_data)[1] = "year"
 # import population data
 pop_data2 = read_csv("./data/New_York_City_Population_By_Community_Districts2.csv") %>%
  janitor::clean_names() %>%
-  select(borough, cd_name, x2000_population, x2010_population)
+  select(borough, cd_number, cd_name, x2000_population, x2010_population)
   
 # merge the two datasets
 my_data = merge(pop_data2, cd_data, by.x = "cd_name", by.y = "community_district") %>%
@@ -95,20 +95,8 @@ race_death_data = race_death_data %>%
    
 ```
 
-```{r}
-URL <- "http://services5.arcgis.com/GfwWNkhOj9bNBqoJ/arcgis/rest/services/nycd/FeatureServer/0/query?where=1=1&outFields=*&outSR=4326&f=geojson"
-fil <- "nyc_community_districts.geojson"
-if (!file.exists(fil)) download.file(URL, fil)
 
-nyc_districts <- geojson_read(fil, what="sp")
 
-nyc_districts_map <- fortify(nyc_districts, region="BoroCD")
 
-```
-
-```{r}
-map_data("county") %>%
- filter(region == "new york", subregion %in% c("bronx", "brook"))
-```
 
 
