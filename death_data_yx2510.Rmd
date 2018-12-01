@@ -19,6 +19,7 @@ library(viridis)
 
 ```
 
+# 1. data import
 ```{r import data, message = FALSE, warning = FALSE}
 #import death data from 2004 to 2014
 name = list.files(path = "./data", full.names = TRUE, pattern = "*.sas7bdat") 
@@ -54,6 +55,7 @@ Cause of death is denoted with c1 to c22, which represent Deaths due to septicem
 
 Race/ethnicity is denoted with 1 to 5, standing for Hispanic, Asian Non‐Hispanic, White Non‐Hispanic, Black Non‐Hispanic respectively.
 
+# 2. tidy the data
 ```{r split our dataset into several subsets}
 # we are first dealing with death infomation without accounting for other demographic characteristics
 total_death_data = my_tidy_data %>%
@@ -95,8 +97,106 @@ race_death_data = race_death_data %>%
    
 ```
 
+# 3. data viasualization 
+### 3.1 crude mortality data by borough, community district and year
+```{r crude mortality rate}
+# 10-year average crude mortality rate in each community district in New York City
+cd_death_rate = total_death_data %>%
+  group_by(borough, cd_name, year) %>%
+  summarise(total_cd_death = sum(number, na.rm = TRUE), population = mean(population), cd_number = mean(as.numeric(cd_number))) %>%
+  mutate(motality_rate = total_cd_death/population) %>%
+  group_by(cd_name, borough) %>%
+  summarise(average_death_rate = mean(motality_rate), cd_number = mean(cd_number)) %>%
+  arrange(desc(average_death_rate))
 
 
+cd_death_rate %>%
+   ggplot(aes(x = reorder(cd_name,average_death_rate), y = average_death_rate, fill = borough)) +
+   geom_bar(stat = "identity") +
+   labs(title = "10-year average crude mortality rate in each community district in New York City",
+             x = "Community District",
+             y = "Average Motality Rate") +
+        theme(axis.text.x = element_text(angle=90, vjust=0.6))
+   
+  
+
+
+# 10-year average crude mortality rate in each borough in New York City
+borough_death_rate = total_death_data %>%
+  group_by(borough, year) %>%
+  summarise(total_borough_death = sum(number, na.rm = TRUE), population = sum(population)/22) %>%
+  mutate(motality_rate = total_borough_death/population) %>%
+  group_by(borough) %>%
+  summarise(average_death_rate = mean(motality_rate))
+
+borough_death_rate %>%
+   ggplot(aes(x = borough, y = average_death_rate)) +
+   geom_bar(stat = "identity",width = .75, fill="tomato2") +
+   labs(title = "10-year average crude mortality rate in each borough in New York City",
+             x = "Borough",
+             y = "Average Motality Rate") +
+        theme(axis.text.x = element_text(angle=90, vjust=0.6))
+
+
+# annual mortality rate in New York City from 2004 to 2010
+year_death_rate = total_death_data %>%
+  group_by(borough, year) %>%
+  summarise(total_borough_death = sum(number, na.rm = TRUE), population = sum(population)/22) %>%
+  mutate(motality_rate = total_borough_death/population) 
+  
+
+year_death_rate %>%
+  ggplot(aes(x = year, y = motality_rate, group = borough, color = borough)) +
+  geom_line() + geom_point()
+
+  
+```
+
+## 3.2 map: crude mortality data by community district
+```{r add map}
+URL <- "http://services5.arcgis.com/GfwWNkhOj9bNBqoJ/arcgis/rest/services/nycd/FeatureServer/0/query?where=1=1&outFields=*&outSR=4326&f=geojson"
+fil <- "nyc_community_districts.geojson"
+if (!file.exists(fil)) download.file(URL, fil)
+
+nyc_districts = geojson_read(fil, what="sp")
+# nyc_districts@data =  merge(nyc_districts@data, cd_death_rate, by.x = "BoroCD", by.y = "cd_number")
+
+nyc_districts_map = fortify(nyc_districts, region="BoroCD")
+
+mids = cbind.data.frame(as.data.frame(gCentroid(nyc_districts, byid=TRUE)), 
+                         id=nyc_districts$BoroCD)
+
+ny_map = ggplot() %>% + 
+         geom_map(data=nyc_districts_map, map=nyc_districts_map,
+                    aes(x=long, y=lat, map_id=id),
+                    color="#2b2b2b", size=0.15, fill=NA) + 
+        geom_text(data=mids, aes(x=x, y=y, label=id), size=2) +
+        coord_map() + 
+        ggthemes::theme_map()
+
+
+ nyc_districts@data =  merge(nyc_districts@data, cd_death_rate, by.x = "BoroCD", by.y = "cd_number")
+
+choro = data.frame(district=nyc_districts@data$BoroCD,
+                    average_death_rate=nyc_districts@data$average_death_rate)
+
+cd_death_map = nyc_districts_map %>%
+ggplot()+
+geom_map(map=nyc_districts_map,
+                    aes(x=long, y=lat, map_id=id),
+                    color="#2b2b2b", size=0.15, fill=NA) +
+geom_map(data=choro, map=nyc_districts_map,
+                    aes(fill=average_death_rate, map_id=district),
+                    color="#2b2b2b", size=0.15) +
+scale_fill_viridis(name="Average death rate") + 
+coord_map() +
+ggthemes::theme_map() +
+theme(legend.position=c(0.1,0.5)) +
+   labs(title = "average crude mortality rate in each community district in New York City from 2004 to 2014"
+            )
+cd_death_map
+
+```
 
 
 
