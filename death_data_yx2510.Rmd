@@ -89,6 +89,7 @@ total_death_data = my_tidy_data %>%
   select(cd_name: x22, population) %>%
   gather(key = "cause_of_death", value = number, x1:x22)
 
+## 以下几个 population的数据还要改..这里是总人口，要改成gender／age／race-specific 人口
 # cause of death crossed with gender
 gender_death_data = my_tidy_data %>%
    select(cd_name : year, c1male :c22female, population) %>%
