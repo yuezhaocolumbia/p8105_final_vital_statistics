@@ -134,6 +134,38 @@ race_death_data = race_death_data %>%
 
 # 3. data viasualization 
 ### 3.1 crude mortality data by borough, community district and year
+
+```{r}
+replace_cd = function(df){ 
+ 
+  df$cause_of_death[df$cause_of_death == "x1"] = "septicemia" 
+  df$cause_of_death[df$cause_of_death == "x2"] = "HIV"
+  df$cause_of_death[df$cause_of_death == "x3"] = "malignant neoplasms (cancer)"
+  df$cause_of_death[df$cause_of_death == "x4"] = "cancer of the colon, rectum, and anus"
+  df$cause_of_death[df$cause_of_death == "x5"] = "cancer of the pancreas"
+  df$cause_of_death[df$cause_of_death == "x6"] = "trachea, bronchus, and lung"
+  df$cause_of_death[df$cause_of_death == "x7"] = "cancer of the breast (female)"
+  df$cause_of_death[df$cause_of_death == "x8"] = "cancer of the prostate"
+  df$cause_of_death[df$cause_of_death == "x9"] = " diabetes mellitus"
+  df$cause_of_death[df$cause_of_death == "x10"] = "psychoactive substance"
+  df$cause_of_death[df$cause_of_death == "x11"] = "Alzheimer's disease"
+  df$cause_of_death[df$cause_of_death == "x12"] = " diseases of the heart"
+  df$cause_of_death[df$cause_of_death == "x13"] = "hypertension/hypertensive renal disease"
+  df$cause_of_death[df$cause_of_death == "x14"] = "cerebrovascular diseases"
+  df$cause_of_death[df$cause_of_death == "x15"] = "influenza and pneumonia"
+  df$cause_of_death[df$cause_of_death == "x16"] = "chronic lower respiratory diseases"
+  df$cause_of_death[df$cause_of_death == "x17"] = "chronic liver disease and cirrhosis"
+  df$cause_of_death[df$cause_of_death == "x18"] = "Nephritis, Nephrotic Syndrome and Nephrosis"
+  df$cause_of_death[df$cause_of_death == "x19"] = "accident except drug poisoning"
+  df$cause_of_death[df$cause_of_death == "x20"] = "intentional self‐harm (suicide)"
+  df$cause_of_death[df$cause_of_death == "x21"] = "assault (homicide)"
+  df$cause_of_death[df$cause_of_death == "x22"] = "others"
+  df
+}
+
+total_death_data = replace_cd(total_death_data)
+```
+
 ```{r crude mortality rate}
 # 10-year average crude mortality rate in each community district in New York City
 cd_death_rate = total_death_data %>%
@@ -233,25 +265,50 @@ cd_death_map
 
 ```
 
-## 3. leading cause of death in each borough
+## 3. cause-specific mortality rate 
 ```{r}
+# cause-specific mortality rate in each borough
 specific_death_rate = total_death_data %>%
   group_by(borough, year, cause_of_death) %>%
-  summarise(cause_specific_death = sum(number, na.rm = TRUE), population = sum(population)) %>%
-  mutate(cause_specific_death_rate = cause_specific_death/population) %>%
-  group_by(borough, cause_of_death) %>%
+  summarise(cause_specific_death = sum(number, na.rm = TRUE), population = sum(population)) %>% # calculate the population  in each borough and number of people died of each cause 
+  mutate(cause_specific_death_rate = cause_specific_death/population) %>% # calculate cause-specific mortality rate
+  group_by(borough, cause_of_death) %>% # get average death rate
   summarise(mean_cs_death_rate = mean(cause_specific_death_rate)) %>%
   arrange(borough, mean_cs_death_rate)
-  
-  
+
 specific_death_rate %>%
+  ggplot(aes(x = reorder(cause_of_death, mean_cs_death_rate), y = mean_cs_death_rate)) +
+  geom_bar(aes(fill = cause_of_death), stat = "identity") +
+  facet_grid(. ~ borough)  +
+   labs(title = "10-year average cause-specific crude mortality rate in each borough",
+             x = "Cause of Death",
+             y = "Cause-specific Mortality Rate",
+              caption = "Source: vital statistics database: 2004-2014") +
+        theme(axis.text.x = element_text(angle=90, size = 8, vjust=0.6)) +
+        theme(legend.position="bottom", 
+              legend.key.size = unit(.1, "in")) +
+    coord_flip()
+  
+  
+  
+  
+leading_cd_data = specific_death_rate %>%
   group_by(borough) %>%
   top_n(n = 10, wt = mean_cs_death_rate) %>%
-  ggplot(aes(x = reorder(cause_of_death,mean_cs_death_rate), y = mean_cs_death_rate)) +
+  mutate(cause_of_death = as.factor(cause_of_death)) 
+
+# 不知道为啥出现两列unexpected column
+leading_cd_data %>%
+  ggplot(aes(x = reorder(cause_of_death, mean_cs_death_rate), y = mean_cs_death_rate)) +
   geom_bar(stat = "identity") +
   facet_grid(.~ borough) +
   theme(axis.text.x = element_text(angle=90, vjust=0.6))
   
 ```
 
+```{r crude cause-specific mortality rate in different year}
+year_cs_death_ny = total_death_data %>%
+  
+  
+```
 
