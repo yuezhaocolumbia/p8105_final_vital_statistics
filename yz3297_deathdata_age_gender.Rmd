@@ -1,0 +1,48 @@
+---
+title: "yz3297_death_age_gender"
+author: "Yue Zhao"
+date: "2018年12月4日"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Since the cause of death is more likely to be associated with age, we further investigated the infant (<28 days), 1-12months, 65-69 years old and >85 years old groups to see the pattern of the age group. 
+
+```{r cars}
+age_by_CoD = age_death_data %>% 
+  filter(age_group=="1_12months" | age_group=="28days" | age_group=="65_69" | age_group=="85") %>% 
+  group_by(age_group,cause_of_death) %>% 
+  summarise(total_death = sum(borough_age_death)) %>% 
+  arrange(age_group, desc(total_death))
+
+age_by_CoD %>% 
+  group_by(age_group) %>% 
+  top_n(n = 1, wt = total_death) %>% 
+  print()
+
+
+```
+We see that for 1-12 months age group, the leading cause of deaths are "others". For less than 28 days, the leading cause of deaths are also "others". For 65-69 age group the leading cause of death is malignant neoplasms (cancer). For >85 years old, diseases of the heart is the leading cause.
+
+
+```{r cars}
+age_by_CoD2 = age_death_data %>% 
+  filter(age_group=="1_12months" & cause_of_death == "c22" | age_group=="28days" & cause_of_death=="c22" | age_group=="65_69" & cause_of_death=="c3" | age_group=="85" & 
+          cause_of_death=="c12") %>% 
+  group_by(year,age_group,cause_of_death) %>% 
+  summarise(total_death = sum(borough_age_death)) 
+
+age_by_CoD2 %>% 
+  ggplot(aes(x = year, y = total_death, color=age_group)) +
+   geom_line() +
+   labs(title = "10-year average crude mortality rate in each borough in New York City",
+             x = "Borough",
+             y = "Average Motality Rate")
+
+
+```
+
