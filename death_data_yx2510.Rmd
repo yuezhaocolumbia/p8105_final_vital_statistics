@@ -308,7 +308,18 @@ leading_cd_data %>%
 
 ```{r crude cause-specific mortality rate in different year}
 year_cs_death_ny = total_death_data %>%
+  group_by(year, cause_of_death) %>%
+  summarise(specific_death_number = sum(number, na.rm = TRUE), total_population = sum(population)) %>%
+  mutate(motality_rate = specific_death_number/total_population) %>%
+filter(year %in% c("2004", "2008", "2012", "2014")) %>%
+  group_by(year) %>%
+  top_n(n = 10, wt = motality_rate) 
   
+year_cs_death_ny %>%
+  arrange(year, desc(motality_rate)) %>%
+  knitr::kable()
+
+
   
 ```
 
