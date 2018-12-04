@@ -213,14 +213,3 @@ The problem is that we cannot access *the birth defect cases* data from the webs
 How to combination the birth and death together?
 
 the relationship between Maternal and the infant?
-
-``` r
-birth_data = 
-  tibble(file_name = list.files(path = "./birth_data/community_district")) %>% 
-  
-  # iterate over file names and read in data for each subject
-  mutate(output = purrr::map(str_c("./birth_data/community_district/", file_name), haven::read_sas)) %>%
-  
-  # unnest the dataframe
-  unnest() 
-```

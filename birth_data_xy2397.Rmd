@@ -1,0 +1,99 @@
+---
+title: "Birth_data"
+author: "Xue Yang"
+date: 12/3/2018"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+```
+
+#### Load the data from community_district source
+
+```{r}
+birth_data = 
+  tibble(file_name = list.files(path = "./birth_data/community_district")) %>% 
+  
+  # iterate over file names and read in data for each subject
+  mutate(output = purrr::map(str_c("./birth_data/community_district/", file_name), haven::read_sas)) %>%
+  
+  # unnest the dataframe
+  unnest() %>% 
+  separate(file_name, c("name", "year", "del"), sep = c(6, 8)) %>% 
+  select(-name, -del) %>%
+  mutate(year = as.factor(year))
+
+# import cd code data
+cd_code_data = 
+  read_csv("./data/New_York_City_Population_By_Community_Districts2.csv") %>%
+  janitor::clean_names() %>%
+  select(borough, cd_number, cd_name) %>% 
+  rename(cd = cd_number)
+
+# join two data
+birth_data_un = 
+  birth_data %>% 
+  unnest() %>% 
+  left_join(cd_code_data, by = "cd") 
+```
+
+```{r}
+birth_data_un %>% 
+  summarise_all(funs(sum(is.na(.)))) %>% View
+```
+
+```{r}
+# data for sex and nativity
+birth_sex_nativity = 
+  birth_data_un %>% 
+  select(year, cd, cd_name, borough, birthtot, sex1tot_n1, sex2tot_n1, sex1tot_n2, sex2tot_n2) %>% 
+  gather(key = sex_n, value = num, sex1tot_n1:sex2tot_n2) 
+  
+```
+
+```{r}
+# data for gestational age
+birth_ges = 
+  birth_data_un %>% 
+  select(year, cd, cd_name, borough, birthtot, ga1tot:ga5tot) %>% 
+  gather(key = gestational_age, value = num, ga1tot:ga5tot) 
+```
+
+```{r}
+# data for plurality
+birth_plur = 
+  birth_data_un %>% 
+  select(year, cd, cd_name, borough, birthtot, plur1tot:plur2tot) %>% 
+  gather(key = gestational_age, value = num, plur1tot:plur2tot) 
+```
+
+```{r}
+# data for nativity and age
+birth_nat_age = 
+  birth_data_un %>% 
+  select(year, cd, cd_name, borough, birthtot, nat1tot_a1, nat2tot_a1, nat1tot_a2, nat2tot_a2, nat1tot_a3, nat2tot_a3, nat1tot_a4, nat2tot_a4) %>% 
+  gather(key = nativity_age, value = num, nat1tot_a1:nat2tot_a4) 
+  
+```
+
+```{r}
+# data for gestational and age
+birth_ges_age = 
+  birth_data_un %>% 
+  select(year, cd, cd_name, borough, birthtot, ga1ctot_a1, ga2ctot_a1, ga1ctot_a2, ga2ctot_a2, ga1ctot_a3, ga2ctot_a3, ga1ctot_a4, ga2ctot_a4) %>% 
+  gather(key = gestational_age, value = num, ga1ctot_a1:ga2ctot_a4) 
+```
+
+```{r}
+# data for sex and age
+birth_sex_age = 
+  birth_data_un %>% 
+  select(year, cd, cd_name, borough, birthtot, sex1tot_a1, sex2tot_a1, sex1tot_a2, sex2tot_a2, sex1tot_a3, sex2tot_a3, sex1tot_a4, sex2tot_a4) %>% 
+  gather(key = sex_age, value = num, sex1tot_a1:sex2tot_a4) 
+```
+
+
+
