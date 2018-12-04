@@ -40,16 +40,44 @@ birth_data_un =
   left_join(cd_code_data, by = "cd") 
 ```
 
+#### Deal with missing value
+
 ```{r}
 # check for the number of missing value
-birth_data_un %>% 
-  summarise_all(funs(sum(is.na(.)))) 
+missing_value = 
+  birth_data_un %>% 
+  summarise_all(funs(sum(is.na(.)))) %>% 
+  gather(term, num_na, everything()) %>% 
+  mutate(percent = num_na/885) %>% 
+  filter(percent > 0.2)
 ```
+
+
+For the missing value, we count for the number of missing value for each column of the variables and then count for the proportion of them. Using the cutoff = 20%. If the proprtion of missing value is larger than 20%, we delete this column of variable(usually this means to delete a category of one specific variable). And if the proportion is less than 20%, we keep this catagory of the specific variable and valua the NA as the same value as it was in the last yeat of the same borough.
+
+
+```{r}
+# for the data maternal age
+age_na = 
+  birth_data_un %>% 
+  select(year, cd, birthtot, age1tot:age9tot) %>%
+  gather(maternal_age, num, age1tot:age9tot) %>% 
+  group_by(year, cd, birthtot) %>% 
+  summarise(ttl = sum(num, na.rm = TRUE)) %>% 
+  mutate(delta = birthtot - ttl) %>% 
+  arrange(desc(delta))
+```
+So for the age variable, we delete the category "age1tot", "age9tot"
 
 
 #### Tidy the data for each variables separately
 
-****
+
+
+**Individual Variables**
+
+age, race, nativity, parity, maternal marital status, infant sex, infant birthweight, infant gestational age
+
 ```{r}
 # data for maternal age
 maternal_age_data = 
@@ -62,6 +90,7 @@ maternal_age_data =
   knitr::kable(digits = 3)
 ```
 
+  
 ```{r}
 # data for maternal race
 maternal_race_data = 
@@ -86,29 +115,6 @@ born_demo_data =
   knitr::kable(digits = 3)
 ```
 
-```{r}
-# data for maternal ancestry
-maternal_anc_data = 
-  birth_data_un %>% 
-  select(year, cd, cd_name, borough, birthtot, ancs1tot:ancs15tot) %>%
-  gather(maternal_anc, num, ancs1tot:ancs15tot) %>% 
-  group_by(year, borough, maternal_anc) %>% 
-  summarise(number = sum(num)) %>% 
-  spread(key = maternal_anc, value = number) %>% 
-  knitr::kable(digits = 3)
-```
-
-```{r}
-# data for maternal birthplace
-maternal_birth_place_data = 
-  birth_data_un %>% 
-  select(year, cd, cd_name, borough, birthtot, bpl1tot:bpl_oth_tot) %>%
-  gather(maternal_birth_place, num, bpl1tot:bpl_oth_tot) %>% 
-  group_by(year, borough, maternal_birth_place) %>% 
-  summarise(number = sum(num)) %>% 
-  spread(key = maternal_birth_place, value = number) %>% 
-  knitr::kable(digits = 3)
-```
 
 ```{r}
 # data for parity
@@ -122,6 +128,7 @@ parity_data =
   knitr::kable(digits = 3)
 ``` 
 
+
 ```{r}
 # data for maternal marital status 
 marry_data = 
@@ -133,6 +140,7 @@ marry_data =
   spread(key = marry_status, value = number) %>% 
   knitr::kable(digits = 3)
 ```
+
 
 ```{r}
 # data for infant sex
@@ -147,7 +155,7 @@ infant_sex_data =
 ```
 
 ```{r}
-# data for maternal Pre-pregnancy Weight
+# data for infant birthweight
 birth_weight_data =  
   birth_data_un %>% 
   select(year, cd, cd_name, borough, birthtot, bwt1tot:bwt9tot) %>%
@@ -155,30 +163,6 @@ birth_weight_data =
   group_by(year, borough, birth_weight) %>% 
   summarise(number = sum(num)) %>% 
   spread(key = birth_weight, value = number) %>% 
-  knitr::kable(digits = 3)
-```
-
-```{r}
-# data for Five minute Apgar score counts
-apg_count_data =  
-  birth_data_un %>% 
-  select(year, cd, cd_name, borough, birthtot, apg1tot:apg5tot) %>%
-  gather(apg_count, num, apg1tot:apg5tot) %>% 
-  group_by(year, borough, apg_count) %>% 
-  summarise(number = sum(num)) %>% 
-  spread(key = apg_count, value = number) %>% 
-  knitr::kable(digits = 3)
-```
-
-```{r}
-# data for Place of Birth Counts
-birth_place_data =  
-  birth_data_un %>% 
-  select(year, cd, cd_name, borough, birthtot, pob1tot:pob5tot) %>%
-  gather(birth_place, num, pob1tot:pob5tot) %>% 
-  group_by(year, borough, birth_place) %>% 
-  summarise(number = sum(num)) %>% 
-  spread(key = birth_place, value = number) %>% 
   knitr::kable(digits = 3)
 ```
 
@@ -194,19 +178,16 @@ birth_ges =
   knitr::kable(digits = 3)
 ```
 
-```{r}
-# data for plurality
-birth_plur = 
-  birth_data_un %>% 
-  select(year, cd, cd_name, borough, birthtot, plur1tot:plur2tot) %>% 
-  gather(key = plur, value = num, plur1tot:plur2tot) %>% 
-  group_by(year, borough, plur) %>% 
-  summarise(number = sum(num)) %>% 
-  spread(key = plur, value = number) %>% 
-  knitr::kable(digits = 3)
-```
 
-**Cross data**
+
+
+
+
+
+
+**Crossed Variables**
+infant birthweight and maternal age, infant sex and maternal nativity, maternal nativity and maternal age, gestational and maternal age, infant sex and maternal age
+
 ```{r}
 # data for infant birthweight and maternal age
 bwt_age_data =  
@@ -220,57 +201,7 @@ bwt_age_data =
   knitr::kable(digits = 3)
 ```
 
-```{r}
-# data for infant birthweight and maternal nativity
-bwt_nat_data =  
-  birth_data_un %>%
-  select(year, cd, cd_name, borough, birthtot, contains("ctot_n")) %>%
-  select(year, cd, cd_name, borough, birthtot, starts_with("bwt")) %>% 
-  gather(bwt_nat, num, bwt1ctot_n1:bwt2ctot_n2) %>% 
-  group_by(year, borough, bwt_nat) %>% 
-  summarise(number = sum(num)) %>% 
-  spread(key = bwt_nat, value = number) %>% 
-  knitr::kable(digits = 3)
-```
 
-```{r}
-# data for infant gestational age and maternal nativity
-ga_nat_data =  
-  birth_data_un %>%
-  select(year, cd, cd_name, borough, birthtot, contains("ctot_n")) %>%
-  select(year, cd, cd_name, borough, birthtot, starts_with("ga")) %>% 
-  gather(ga_nat, num, ga1ctot_n1:ga2ctot_n2) %>% 
-  group_by(year, borough, ga_nat) %>% 
-  summarise(number = sum(num)) %>% 
-  spread(key = ga_nat, value = number) %>% 
-  knitr::kable(digits = 3)
-```
-
-```{r}
-# data for Plurality and maternal age
-plur_age_data =  
-  birth_data_un %>%
-  select(year, cd, cd_name, borough, birthtot, contains("tot_a")) %>%
-  select(year, cd, cd_name, borough, birthtot, starts_with("plu")) %>% 
-  gather(plur_age, num, plur1tot_a1:plur2tot_a4) %>% 
-  group_by(year, borough, plur_age) %>% 
-  summarise(number = sum(num)) %>% 
-  spread(key = plur_age, value = number) %>% 
-  knitr::kable(digits = 3)
-```
-
-```{r}
-# data for Plurality and maternal nativity
-plur_nat_data = 
-  birth_data_un %>%
-  select(year, cd, cd_name, borough, birthtot, contains("tot_n")) %>%
-  select(year, cd, cd_name, borough, birthtot, starts_with("plu")) %>% 
-  gather(plur_nat, num, plur1tot_n1:plur2tot_n2) %>% 
-  group_by(year, borough, plur_nat) %>% 
-  summarise(number = sum(num)) %>% 
-  spread(key = plur_nat, value = number) %>% 
-  knitr::kable(digits = 3)
-```
 
 ```{r}
 # data for infant sex and maternal nativity
@@ -286,10 +217,8 @@ sex_nat_data =
 ```
 
 
-
-
 ```{r}
-# data for nativity and maternal age
+# data for maternal nativity and maternal age
 birth_nat_age = 
   birth_data_un %>% 
   select(year, cd, cd_name, borough, birthtot, nat1tot_a1, nat2tot_a1, nat1tot_a2, nat2tot_a2, nat1tot_a3, nat2tot_a3, nat1tot_a4, nat2tot_a4) %>% 
