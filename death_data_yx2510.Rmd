@@ -98,32 +98,35 @@ total_death_data = my_tidy_data %>%
 # cause of death crossed with gender
 gender_death_data = my_tidy_data %>%
    select(borough : year, c1male :c22female) %>%
-   gather (key = "cause_of_death", value = "number", c1male : c22female)   %>%
+   gather (key = "cause_of_death", value = "number", c1male : c22female)   
+
+  gender_death_data = gender_death_data %>%
    mutate(gender = ifelse(str_detect(gender_death_data$cause_of_death, "female"), "female", "male"))
 
 gender_death_data =gender_death_data %>%
  mutate(cause_of_death = 
        substr(gender_death_data$cause_of_death,1,str_locate(gender_death_data$cause_of_death, "[0-9][a-zA-Z]")[,1])
  )  
+
+gender_death_data2 = gender_death_data %>%
+  group_by(borough, year, gender, cause_of_death) %>%
+  summarise(number_cs_boro_gdr = sum(number, na.rm = TRUE))
   
 
 
 # sub-group population data - by gender
-nyc_demo_gender = readxl::read_xlsx("./data/t_sf1_p10_nyc.xlsx", range = "G5:J29") %>%
-  mutate(gender = tolower(gender)) %>%
-  rename("borough_population" = "number") %>%
-  spread(key = year, value = borough_population) %>%
-  rename("2000_population" = "2000", "2010_population" = "2010") 
+nyc_demo_gender = my_data %>%
+  select(cd_number, borough, male, female, year) %>%
+  gather(key = "gender", value = "population_by_gender", male:female) %>%
+  group_by(borough, gender, year) %>%
+  summarise(borough_population_gender = sum(population_by_gender, na.rm =TRUE))
 
   
 
-gender_death_data2 = merge(gender_death_data, nyc_demo_gender, by = c("gender", "borough")) 
+gender_death_data2 = merge(gender_death_data2, nyc_demo_gender, by = c("gender", "borough", "year")) 
 
-gender_death_data2 = gender_death_data2 %>%
-  mutate(population = ifelse(year < 2010, gender_death_data2$`2000_population`, gender_death_data2$`2010_population`))  %>%
-  select(borough, cd_number, gender, year, cause_of_death, number, population) %>%
-  rename("population_borough" = "population") %>%
-  arrange(year, borough, cd_number)
+gender_death_data2 %>%
+  filter(gender =="female", year == "2010", gender == "")
   
 ```
 
@@ -143,6 +146,28 @@ age_death_data = age_death_data %>%
            substr(age_death_data$cause_of_death, 0, (str_locate(age_death_data$cause_of_death, "age")[,1] -1)))  
 age_death_data = age_death_data %>%
   mutate(cause_of_death = gsub("c", "x", age_death_data$cause_of_death))
+
+# aggregate cd-wise number into borough-wise
+age_death_data = age_death_data %>%
+  group_by(borough, year, age_group, cause_of_death) %>%
+  summarise(borough_age_death = sum(number, na.rm = TRUE))
+
+# sub-group population data - by age
+nyc_demo_age = my_data %>%
+  select(cd_number, borough, age_28days : age_85, year) %>%
+  gather(key = "age_group", value = "population_by_age", age_28days: age_85) 
+
+nyc_demo_age = nyc_demo_age %>%
+   mutate(
+    age_group = 
+      substr(nyc_demo_age$age_group, str_locate(nyc_demo_age$age_group, "age")[,1] + 4, nchar(nyc_demo_age$age_group))
+    ) %>%
+  mutate(age_group =  as.factor(age_group)) %>%
+  group_by(borough, age_group, year) %>%
+  summarise(borough_age_population = sum(population_by_age, na.rm =TRUE)) 
+
+# merge
+age_death_data2 = merge(age_death_data, nyc_demo_age, by = c("borough", "age_group" , "year"))
   
 ```
 
