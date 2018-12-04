@@ -43,8 +43,8 @@ my_data = merge(pop_data2, cd_data, by.x = "cd_name", by.y = "community_district
 my_tidy_data = my_data %>% # we'll use 2000 year population data for 2000 - 2009, and 2010 year data for 2010 -2014 
   mutate(population = ifelse(year < 2010, my_data$x2000_population, my_data$x2010_population)) %>%
   select(-c(x2000_population, x2010_population)) %>% 
-  mutate(cd_name = as.factor(cd_name),
-         year = as.factor(year)) %>%
+  mutate(cd_name = as.factor(cd_name)
+         ) %>%
   select(c(cd_name:year, x1:population))
 
 ```
@@ -83,38 +83,53 @@ Race/ethnicity is denoted with 1 to 5, standing for:
 
 
 # 2. tidy the data
+#### 2.1 dataset without demographic characteristics
 ```{r split our dataset into several subsets}
 # we are first dealing with death infomation without accounting for other demographic characteristics
 total_death_data = my_tidy_data %>%
   select(cd_name: x22, population) %>%
   gather(key = "cause_of_death", value = number, x1:x22)
 
-# sub-group population data
-nyc_demo_gender = readxl::read_xlsx("./data/t_sf1_p10_nyc.xlsx", range = "G5:J29") %>%
-  mutate(gender = tolower(gender)) %>%
-  rename("borough_population" = "number")
+   
+```
 
-
+## 2.2 cause of death crossed with gender
+```{r}
 # cause of death crossed with gender
 gender_death_data = my_tidy_data %>%
    select(borough : year, c1male :c22female) %>%
-   gather (key = "cause_of_death", value = "number", c1male : c22female)  %>%
-   mutate(gender = ifelse(str_detect(gender_death_data$cause_of_death, "female"), "female", "male"))%>%     mutate(cause_of_death = 
-      substr(gender_death_data$cause_of_death,1,str_locate(gender_death_data$cause_of_death, "[0-9][a-zA-Z]")[1,])
-)   %>%
-  mutate(cause_of_death = gsub("c","x", gender_death_data$cause_of_death))
+   gather (key = "cause_of_death", value = "number", c1male : c22female)   %>%
+   mutate(gender = ifelse(str_detect(gender_death_data$cause_of_death, "female"), "female", "male"))
 
-gender_death_data = gender_death_data %>%
-  mutate(cause_of_death = gsub("m","", gender_death_data$cause_of_death))
-gender_death_data = gender_death_data %>%
-  mutate(cause_of_death = gsub("f","", gender_death_data$cause_of_death))
-
-
-  
+gender_death_data =gender_death_data %>%
+ mutate(cause_of_death = 
+       substr(gender_death_data$cause_of_death,1,str_locate(gender_death_data$cause_of_death, "[0-9][a-zA-Z]")[,1])
+ )  
   
 
-  merge(gender_death_data, nyc_demo_gender, by = c("gender", "borough"))
 
+# sub-group population data - by gender
+nyc_demo_gender = readxl::read_xlsx("./data/t_sf1_p10_nyc.xlsx", range = "G5:J29") %>%
+  mutate(gender = tolower(gender)) %>%
+  rename("borough_population" = "number") %>%
+  spread(key = year, value = borough_population) %>%
+  rename("2000_population" = "2000", "2010_population" = "2010") 
+
+  
+
+gender_death_data2 = merge(gender_death_data, nyc_demo_gender, by = c("gender", "borough")) 
+
+gender_death_data2 = gender_death_data2 %>%
+  mutate(population = ifelse(year < 2010, gender_death_data2$`2000_population`, gender_death_data2$`2010_population`))  %>%
+  select(borough, cd_number, gender, year, cause_of_death, number, population) %>%
+  rename("population_borough" = "population") %>%
+  arrange(year, borough, cd_number)
+  
+```
+
+
+## 2.3 dataset crossed with age
+```{r}
 # cause of death crossed with age 
 age_death_data = my_tidy_data %>%
 select(cd_name: year, c1age_1_12months:c22age_85) %>%
@@ -128,8 +143,12 @@ age_death_data = age_death_data %>%
            substr(age_death_data$cause_of_death, 0, (str_locate(age_death_data$cause_of_death, "age")[,1] -1)))  
 age_death_data = age_death_data %>%
   mutate(cause_of_death = gsub("c", "x", age_death_data$cause_of_death))
+  
+```
 
 
+## 2.4 dataset crossed with race
+```{r}
 
 # cause of death crossed with race 
 race_death_data = my_tidy_data %>%
@@ -141,12 +160,9 @@ race_death_data = my_tidy_data %>%
       substr(cause_of_death, start = 1, stop = nchar(race_death_data2$cause_of_death)-1)
                   ) %>%
   mutate(cause_of_death = gsub("c", "x", race_death_data2$cause_of_death))
-  
-  
-   
 ```
 
-Now I added specific cause od death to the dataset.
+Now I added specific cause of death to the dataset.
 ```{r}
 replace_cd = function(df){ 
  
