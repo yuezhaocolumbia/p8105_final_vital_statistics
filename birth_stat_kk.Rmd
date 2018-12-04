@@ -120,3 +120,29 @@ sex_nat_data =  birth_data_cd_un %>%
   gather(sex_nat, num, sex1tot_n1:sex2tot_n2)
 ```
 
+```{r}
+birth_data_un %>% 
+  select(year, cd, birthtot, age1tot:age9tot) %>%
+  gather(maternal_age, num, age1tot:age9tot) %>% 
+  group_by(year, cd, birthtot) %>% 
+  summarise(ttl = sum(num, na.rm = TRUE)) %>% 
+  mutate(delta = birthtot - ttl) %>% 
+  arrange(desc(delta))
+
+birth_data_un %>% 
+  select(year, cd, cd_name, borough, birthtot, age1tot:age9tot) %>%
+  gather(maternal_age, num, age1tot:age9tot) %>% 
+  group_by(maternal_age) %>%
+  select(maternal_age, num) %>% 
+  summarise_all(funs(sum(is.na(.)))) %>% 
+  mutate(percent = num/885) %>% 
+  filter(percent > 0.2)
+  spread(key = maternal_age, value = number) 
+  
+birth_data_un %>% 
+  summarise_all(funs(sum(is.na(.)))) %>% 
+  gather(term, num_na, everything()) %>% 
+  mutate(percent = num_na/885) %>% 
+  filter(percent > 0.2) 
+```
+
