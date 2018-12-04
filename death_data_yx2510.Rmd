@@ -47,6 +47,8 @@ my_tidy_data = my_data %>% # we'll use 2000 year population data for 2000 - 2009
          ) %>%
   select(c(cd_name:year, x1:population))
 
+
+
 ```
 
 The generated dataset consists of `r nrow(my_tidy_data)` observations  and `r ncol(my_tidy_data)` columns. Each observation records information on population and death statistics in one of `r n_distinct(my_tidy_data$cd_name)` community districts in New York City. Variables in the original dataset include sex, age, ethnicity and cause of death and their cross variable with each other. Since we are interested in cause of death in this project, we only kept cause of death and its cross information with other demographic variables. Noteworthily, the presence of a large proportion of NAs could be an issue in later steps.
@@ -114,16 +116,6 @@ gender_death_data2 = gender_death_data %>%
   
 
 
-# sub-group population data - by gender
-nyc_demo_gender = my_data %>%
-  select(cd_number, borough, male, female, year) %>%
-  gather(key = "gender", value = "population_by_gender", male:female) %>%
-  group_by(borough, gender, year) %>%
-  summarise(borough_population_gender = sum(population_by_gender, na.rm =TRUE))
-
-  
-
-gender_death_data2 = merge(gender_death_data2, nyc_demo_gender, by = c("gender", "borough", "year")) 
 
 
   
@@ -153,7 +145,8 @@ age_death_data = age_death_data %>%
 # sub-group population data - by age
 nyc_demo_age = my_data %>%
   select(cd_number, borough, age_28days : age_85, year) %>%
-  gather(key = "age_group", value = "population_by_age", age_28days: age_85) 
+  gather(key = "age_group", value = "population_by_age", age_28days: age_85)  %>%
+  filter(borough == "Bronx")
 
 nyc_demo_age = nyc_demo_age %>%
    mutate(
@@ -405,6 +398,41 @@ year_cs_death_ny %>%
 
 #### 3.3 death data analysis by age
 ```{r}
+age_death_cause = age_death_data %>%
+  group_by(age_group, borough, year) %>%
+  top_n(n = 10, wt = borough_age_death) %>%
+  arrange(year, borough, age_group, desc(borough_age_death))
+  
 
+```
+
+#### 3.4 by gender
+```{r}
+# death by gender in each borough by year
+gender_death_cause = gender_death_data2 %>%
+  group_by(gender, cause_of_death) %>%
+  summarise(average_death = mean(sum(number_cs_boro_gdr))) %>%
+  top_n(n = 10, wt = average_death) %>%
+  arrange(gender, desc(average_death))
+
+par(mfrow = c(2,1))
+gender_death_cause %>% 
+  filter(gender == "female") %>%
+  ggplot(aes(x = reorder(cause_of_death, average_death), y = average_death)) +
+  geom_bar(stat = "identity", aes(fill = gender) ) 
+
+gender_death_cause %>% 
+  filter(gender == "male") %>%
+  ggplot(aes(x = reorder(cause_of_death, average_death), y = average_death)) +
+  geom_bar(stat = "identity", aes(fill = gender) ) 
+# death 
+```
+
+#### by. race
+```{r}
+race_death_cause = race_death_data %>%
+  group_by(borough, gender, year) %>%
+  top_n(n = 10, wt = number_cs_boro_gdr) %>%
+  arrange(year, borough, gender, desc(number_cs_boro_gdr))
 ```
 
