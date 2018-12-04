@@ -385,7 +385,7 @@ birth_data_un %>%
   gather(term, num_na, everything()) %>% 
   mutate(percent = num_na/885) 
 
-#no missing data
+
 birth_weight_nomiss_data =
   birth_data_un %>% 
   select(year, cd, cd_name, borough, birthtot, bwt1tot:bwt9tot) %>%
@@ -422,7 +422,6 @@ birth_data_un %>%
   gather(term, num_na, everything()) %>% 
   mutate(percent = num_na/885) 
 
-#no missing data
 birth_ges_nomiss_data =
   birth_data_un %>% 
   select(year, cd, cd_name, borough, birthtot, ga1tot:ga5tot) %>%
@@ -454,8 +453,9 @@ bwt_age_data =
   knitr::kable(digits = 3)
 
 birth_data_un %>% 
-  select(year, cd, birthtot, ga1tot:ga5tot) %>%
-  gather(bwt, num, ga1tot:ga5tot) %>% 
+  select(year, cd, birthtot, contains("ctot_a")) %>%
+  select(year, cd, cd_name, borough, birthtot, starts_with("bwt")) %>%
+  gather(bwt, num, bwt1ctot_a1:bwt2ctot_a4) %>% 
   group_by(year, cd, birthtot) %>% 
   summarise(ttl = sum(num, na.rm = TRUE)) %>% 
   mutate(delta = birthtot - ttl, percent = delta/birthtot) %>% 
