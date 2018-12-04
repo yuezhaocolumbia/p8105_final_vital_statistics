@@ -1,0 +1,122 @@
+---
+title: "birth_stat_kk"
+author: "Kangkang Zhang"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(haven)
+library(purrr)
+```
+
+Three different source of the data: community district, zip code and census tract
+```{r}
+# community district
+file_name = tibble(
+  id = list.files("./birth_data/community_district")
+)
+
+birth_data_cd = file_name %>%
+  mutate(infor = map(str_c("./birth_data/community_district/", id), read_sas)) %>% 
+  separate(id, c("name", "year", "del"), sep = c(6, 8)) %>% 
+  select(-name, -del) %>% 
+  mutate(year = as.factor(year))
+
+# import cd code data
+cd_code_data = read_csv("./data/New_York_City_Population_By_Community_Districts2.csv") %>%
+ janitor::clean_names() %>%
+  select(borough, cd_number, cd_name) %>% 
+  rename(cd = cd_number)
+
+birth_data_cd_un = birth_data_cd %>% 
+  unnest() %>% 
+  left_join(cd_code_data, by = "cd") 
+```
+
+```{r}
+birth_data_cd %>% 
+  unnest() %>% 
+  summarise_all(funs(sum(is.na(.)))) %>% View
+
+maternal_age_data = birth_data_cd_un %>% 
+  select(year, cd, cd_name, borough, birthtot, age1tot:age9tot) %>%
+  gather(maternal_age, num, age1tot:age9tot)
+
+maternal_race_data = birth_data_cd_un %>% 
+  select(year, cd, cd_name, borough, birthtot, eth_bl_tot:eth_ap_tot) %>%
+  gather(maternal_race, num, eth_bl_tot:eth_ap_tot)
+
+born_demo_data = birth_data_cd_un %>% 
+  select(year, cd, cd_name, borough, birthtot, nat1tot:nat2tot) %>%
+  gather(born_demo, num, nat1tot:nat2tot)
+  
+maternal_anc_data = birth_data_cd_un %>% 
+  select(year, cd, cd_name, borough, birthtot, ancs1tot:ancs15tot) %>%
+  gather(maternal_anc, num, ancs1tot:ancs15tot)
+
+maternal_birth_place_data = birth_data_cd_un %>% 
+  select(year, cd, cd_name, borough, birthtot, bpl1tot:bpl_oth_tot) %>%
+  gather(maternal_birth_place, num, bpl1tot:bpl_oth_tot)
+
+parity_data = birth_data_cd_un %>% 
+  select(year, cd, cd_name, borough, birthtot, par1tot:par2tot) %>%
+  gather(parity, num, par1tot:par2tot)
+
+marry_data = birth_data_cd_un %>% 
+  select(year, cd, cd_name, borough, birthtot, mar1tot:mar2tot) %>%
+  gather(marry_status, num, mar1tot:mar2tot)
+
+infant_sex_data = birth_data_cd_un %>% 
+  select(year, cd, cd_name, borough, birthtot, sex1tot:sex2tot) %>%
+  gather(infant_sex, num, sex1tot:sex2tot)
+
+infant_sex_data = birth_data_cd_un %>% 
+  select(year, cd, cd_name, borough, birthtot, sex1tot:sex2tot) %>%
+  gather(infant_sex, num, sex1tot:sex2tot)
+
+birth_weight_data =  birth_data_cd_un %>% 
+  select(year, cd, cd_name, borough, birthtot, bwt1tot:bwt9tot) %>%
+  gather(birth_weight, num, bwt1tot:bwt9tot)
+
+apg_count_data =  birth_data_cd_un %>% 
+  select(year, cd, cd_name, borough, birthtot, apg1tot:apg5tot) %>%
+  gather(apg_count, num, apg1tot:apg5tot)
+
+birth_place_data =  birth_data_cd_un %>% 
+  select(year, cd, cd_name, borough, birthtot, pob1tot:pob5tot) %>%
+  gather(birth_place, num, pob1tot:pob5tot)
+
+bwt_age_data =  birth_data_cd_un %>%
+  select(year, cd, cd_name, borough, birthtot, contains("ctot_a")) %>%
+  select(year, cd, cd_name, borough, birthtot, starts_with("bwt")) %>% 
+  gather(bwt_age, num, bwt1ctot_a1:bwt2ctot_a4)
+
+bwt_nat_data =  birth_data_cd_un %>%
+  select(year, cd, cd_name, borough, birthtot, contains("ctot_n")) %>%
+  select(year, cd, cd_name, borough, birthtot, starts_with("bwt")) %>% 
+  gather(bwt_nat, num, bwt1ctot_n1:bwt2ctot_n2)
+
+ga_nat_data =  birth_data_cd_un %>%
+  select(year, cd, cd_name, borough, birthtot, contains("ctot_n")) %>%
+  select(year, cd, cd_name, borough, birthtot, starts_with("ga")) %>% 
+  gather(ga_nat, num, ga1ctot_n1:ga2ctot_n2)
+
+plur_age_data =  birth_data_cd_un %>%
+  select(year, cd, cd_name, borough, birthtot, contains("tot_a")) %>%
+  select(year, cd, cd_name, borough, birthtot, starts_with("plu")) %>% 
+  gather(plur_age, num, plur1tot_a1:plur2tot_a4)
+
+plur_nat_data =  birth_data_cd_un %>%
+  select(year, cd, cd_name, borough, birthtot, contains("tot_n")) %>%
+  select(year, cd, cd_name, borough, birthtot, starts_with("plu")) %>% 
+  gather(plur_nat, num, plur1tot_n1:plur2tot_n2)
+
+sex_nat_data =  birth_data_cd_un %>%
+  select(year, cd, cd_name, borough, birthtot, contains("tot_n")) %>%
+  select(year, cd, cd_name, borough, birthtot, starts_with("sex")) %>% 
+  gather(sex_nat, num, sex1tot_n1:sex2tot_n2)
+```
+
