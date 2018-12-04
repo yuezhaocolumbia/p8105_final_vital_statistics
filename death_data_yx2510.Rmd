@@ -77,10 +77,10 @@ Cause of death is denoted with c1 to c22, which represent Deaths due to:
 
 Race/ethnicity is denoted with 1 to 5, standing for: 
 1. Hispanic, 
-2. Asian Non‐Hispanic, 
-3. White Non‐Hispanic, 
-4. Black Non‐Hispanic,
-5. others
+3. Asian Non‐Hispanic, 
+4. White Non‐Hispanic, 
+5. Black Non‐Hispanic,
+
 
 # 2. tidy the data
 ```{r split our dataset into several subsets}
@@ -88,8 +88,6 @@ Race/ethnicity is denoted with 1 to 5, standing for:
 total_death_data = my_tidy_data %>%
   select(cd_name: x22, population) %>%
   gather(key = "cause_of_death", value = number, x1:x22)
-
-## 以下几个 population的数据还要改..这里是总人口，要改成gender／age／race-specific 人口
 
 # sub-group population data
 nyc_demo_gender = readxl::read_xlsx("./data/t_sf1_p10_nyc.xlsx", range = "G5:J29") %>%
@@ -100,13 +98,19 @@ nyc_demo_gender = readxl::read_xlsx("./data/t_sf1_p10_nyc.xlsx", range = "G5:J29
 # cause of death crossed with gender
 gender_death_data = my_tidy_data %>%
    select(borough : year, c1male :c22female) %>%
-   gather (key = "cause_of_death", value = "number", c1male : c22female) 
+   gather (key = "cause_of_death", value = "number", c1male : c22female)  %>%
+   mutate(gender = ifelse(str_detect(gender_death_data$cause_of_death, "female"), "female", "male"))%>%     mutate(cause_of_death = 
+      substr(gender_death_data$cause_of_death,1,str_locate(gender_death_data$cause_of_death, "[0-9][a-zA-Z]")[1,])
+)   %>%
+  mutate(cause_of_death = gsub("c","x", gender_death_data$cause_of_death))
+
 gender_death_data = gender_death_data %>%
-   mutate(gender = ifelse(str_detect(gender_death_data$cause_of_death, "female"), "female", "male")) %>%
-   mutate(cause_of_death = 
-      substr(gender_death_data$cause_of_death,1,str_locate(gender_death_data$cause_of_death, "female")[,1] + 4))  %>%
-  group_by(borough, year, cause_of_death) %>%
-  summarise(cs_death_borough = sum(number, na.r))
+  mutate(cause_of_death = gsub("m","", gender_death_data$cause_of_death))
+gender_death_data = gender_death_data %>%
+  mutate(cause_of_death = gsub("f","", gender_death_data$cause_of_death))
+
+
+  
   
 
   merge(gender_death_data, nyc_demo_gender, by = c("gender", "borough"))
@@ -118,23 +122,27 @@ select(cd_name: year, c1age_1_12months:c22age_85) %>%
 age_death_data = age_death_data %>% 
   mutate(
     age_group = 
-      substr(age_death_data$cause_of_death, str_locate(age_death_data$cause_of_death, "age")[,1] + 4, length(age_death_data$cause_of_death))
+      substr(age_death_data$cause_of_death, str_locate(age_death_data$cause_of_death, "age")[,1] + 4, nchar(age_death_data$cause_of_death))
     ) %>%
-  mutate(cause_of_death = str_replace(cause_of_death, cause_of_death, substr(gender_death_data$cause_of_death, 0, (str_locate(age_death_data$cause_of_death, "age")[,1] -1)))) 
+  mutate(cause_of_death =  
+           substr(age_death_data$cause_of_death, 0, (str_locate(age_death_data$cause_of_death, "age")[,1] -1)))  
+age_death_data = age_death_data %>%
+  mutate(cause_of_death = gsub("c", "x", age_death_data$cause_of_death))
 
 
 
 # cause of death crossed with race 
 race_death_data = my_tidy_data %>%
-   select(cd_name: year, c11:c225, population) %>%
-     gather (key = "cause_of_death", value = "number", c11:c225) 
-
-race_death_data = race_death_data %>% 
+   select(cd_name: year, c11:c225) %>%
+     gather (key = "cause_of_death", value = "number", c11:c225) %>%
   mutate(race = stri_sub(race_death_data$cause_of_death, -1)) %>%
   mutate(
     cause_of_death = 
-      str_replace(cause_of_death, cause_of_death, substr(race_death_data$cause_of_death, 1, length(race_death_data$cause_of_death)-3)
-                  ))
+      substr(cause_of_death, start = 1, stop = nchar(race_death_data2$cause_of_death)-1)
+                  ) %>%
+  mutate(cause_of_death = gsub("c", "x", race_death_data2$cause_of_death))
+  
+  
    
 ```
 
@@ -168,6 +176,7 @@ replace_cd = function(df){
 }
 
 total_death_data = replace_cd(total_death_data)
+race_death_data2 = replace_cd(race_death_data2)
 ```
 
 # 3. data viasualization 
