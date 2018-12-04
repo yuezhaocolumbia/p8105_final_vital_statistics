@@ -1,19 +1,11 @@
----
-title: "Birth_data"
-author: "Xue Yang"
-date: 12/3/2018"
-output: github_document
----
+Birth\_data
+================
+Xue Yang
+12/3/2018"
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+#### Load and clean the data from community\_district source
 
-library(tidyverse)
-```
-
-#### Load and clean the data from community_district source
-
-```{r}
+``` r
 birth_data = 
   tibble(file_name = list.files(path = "./birth_data/community_district")) %>% 
   
@@ -32,7 +24,21 @@ cd_code_data =
   janitor::clean_names() %>%
   select(borough, cd_number, cd_name) %>% 
   rename(cd = cd_number)
+```
 
+    ## Parsed with column specification:
+    ## cols(
+    ##   Borough = col_character(),
+    ##   `CD Number` = col_integer(),
+    ##   `CD Name` = col_character(),
+    ##   `1970 Population` = col_integer(),
+    ##   `1980 Population` = col_integer(),
+    ##   `1990 Population` = col_integer(),
+    ##   `2000 Population` = col_integer(),
+    ##   `2010 Population` = col_integer()
+    ## )
+
+``` r
 # join two data
 birth_data_un = 
   birth_data %>% 
@@ -40,16 +46,47 @@ birth_data_un =
   left_join(cd_code_data, by = "cd") 
 ```
 
-```{r}
+``` r
 # check for the number of missing value
 birth_data_un %>% 
   summarise_all(funs(sum(is.na(.)))) 
 ```
 
+    ## # A tibble: 1 x 364
+    ##    year    cd birthtot age1tot age2tot age3tot age4tot age5tot age6tot
+    ##   <int> <int>    <int>   <int>   <int>   <int>   <int>   <int>   <int>
+    ## 1     0     0        0     774      84      46       0       0       0
+    ## # ... with 355 more variables: age7tot <int>, age8tot <int>,
+    ## #   age9tot <int>, eth_bl_tot <int>, eth_wh_tot <int>, eth_hi_tot <int>,
+    ## #   eth_ap_tot <int>, nat1tot <int>, nat2tot <int>, ancs1tot <int>,
+    ## #   ancs2tot <int>, ancs3tot <int>, ancs4tot <int>, ancs5tot <int>,
+    ## #   ancs6tot <int>, ancs7tot <int>, ancs8tot <int>, ancs9tot <int>,
+    ## #   ancs10tot <int>, ancs11tot <int>, ancs12tot <int>, ancs13tot <int>,
+    ## #   ancs14tot <int>, ancs15tot <int>, ancs_oth_tot <int>, bpl1tot <int>,
+    ## #   bpl2tot <int>, bpl3tot <int>, bpl4tot <int>, bpl5tot <int>,
+    ## #   bpl6tot <int>, bpl7tot <int>, bpl8tot <int>, bpl9tot <int>,
+    ## #   bpl10tot <int>, bpl11tot <int>, bpl12tot <int>, bpl13tot <int>,
+    ## #   bpl14tot <int>, bpl15tot <int>, bpl_oth_tot <int>, educ1tot <int>,
+    ## #   educ2tot <int>, educ3tot <int>, par1tot <int>, par2tot <int>,
+    ## #   prenat1tot <int>, prenat2tot <int>, prenat3tot <int>,
+    ## #   prenat4tot <int>, pay1tot <int>, pay2tot <int>, pay3tot <int>,
+    ## #   mar1tot <int>, mar2tot <int>, sex1tot <int>, sex2tot <int>,
+    ## #   weight1tot <int>, weight2tot <int>, weight3tot <int>,
+    ## #   weight4tot <int>, bwt1tot <int>, bwt2tot <int>, bwt3tot <int>,
+    ## #   bwt4tot <int>, bwt5tot <int>, bwt6tot <int>, bwt7tot <int>,
+    ## #   bwt8tot <int>, bwt9tot <int>, ga1tot <int>, ga2tot <int>,
+    ## #   ga3tot <int>, ga4tot <int>, ga5tot <int>, apg1tot <int>,
+    ## #   apg2tot <int>, apg3tot <int>, apg4tot <int>, apg5tot <int>,
+    ## #   plur1tot <int>, plur2tot <int>, mth1tot <int>, mth2tot <int>,
+    ## #   mth3tot <int>, mth4tot <int>, pob1tot <int>, pob2tot <int>,
+    ## #   pob3tot <int>, pob4tot <int>, pob5tot <int>, educ1tot_a1 <int>,
+    ## #   educ2tot_a1 <int>, educ3tot_a1 <int>, nat1tot_a1 <int>,
+    ## #   nat2tot_a1 <int>, prenat1ctot_a1 <int>, prenat2ctot_a1 <int>,
+    ## #   weight1tot_a1 <int>, weight2tot_a1 <int>, ...
 
 #### Tidy the data for each variables separately
 
-```{r}
+``` r
 # data for maternal age
 maternal_age_data = 
   birth_data_un %>% 
@@ -61,7 +98,7 @@ maternal_age_data =
   knitr::kable(digits = 3)
 ```
 
-```{r}
+``` r
 # data for maternal race
 maternal_race_data = 
   birth_data_un %>% 
@@ -73,7 +110,7 @@ maternal_race_data =
   knitr::kable(digits = 3)
 ```
 
-```{r}
+``` r
 # data for maternal nativity
 born_demo_data = 
   birth_data_un %>% 
@@ -85,7 +122,7 @@ born_demo_data =
   knitr::kable(digits = 3)
 ```
 
-```{r}
+``` r
 # data for maternal ancestry
 maternal_anc_data = 
   birth_data_un %>% 
@@ -97,7 +134,7 @@ maternal_anc_data =
   knitr::kable(digits = 3)
 ```
 
-```{r}
+``` r
 # data for maternal birthplace
 maternal_birth_place_data = 
   birth_data_un %>% 
@@ -109,7 +146,7 @@ maternal_birth_place_data =
   knitr::kable(digits = 3)
 ```
 
-```{r}
+``` r
 # data for parity
 parity_data = 
   birth_data_un %>% 
@@ -119,9 +156,9 @@ parity_data =
   summarise(number = n()) %>% 
   spread(key = parity, value = number) %>% 
   knitr::kable(digits = 3)
-``` 
+```
 
-```{r}
+``` r
 # data for maternal marital status 
 marry_data = 
   birth_data_un %>% 
@@ -133,7 +170,7 @@ marry_data =
   knitr::kable(digits = 3)
 ```
 
-```{r}
+``` r
 # data for infant sex
 infant_sex_data = 
   birth_data_un %>% 
@@ -145,7 +182,7 @@ infant_sex_data =
   knitr::kable(digits = 3)
 ```
 
-```{r}
+``` r
 # data for maternal Pre-pregnancy Weight
 birth_weight_data =  
   birth_data_un %>% 
@@ -157,7 +194,7 @@ birth_weight_data =
   knitr::kable(digits = 3)
 ```
 
-```{r}
+``` r
 # data for Five minute Apgar score counts
 apg_count_data =  
   birth_data_un %>% 
@@ -169,7 +206,7 @@ apg_count_data =
   knitr::kable(digits = 3)
 ```
 
-```{r}
+``` r
 # data for Place of Birth Counts
 birth_place_data =  
   birth_data_un %>% 
@@ -181,7 +218,7 @@ birth_place_data =
   knitr::kable(digits = 3)
 ```
 
-```{r}
+``` r
 # data for infant gestational age
 birth_ges = 
   birth_data_un %>% 
@@ -193,7 +230,7 @@ birth_ges =
   knitr::kable(digits = 3)
 ```
 
-```{r}
+``` r
 # data for plurality
 birth_plur = 
   birth_data_un %>% 
@@ -206,7 +243,8 @@ birth_plur =
 ```
 
 **Cross data**
-```{r}
+
+``` r
 # data for infant birthweight and maternal age
 bwt_age_data =  
   birth_data_un %>%
@@ -219,7 +257,7 @@ bwt_age_data =
   knitr::kable(digits = 3)
 ```
 
-```{r}
+``` r
 # data for infant birthweight and maternal nativity
 bwt_nat_data =  
   birth_data_un %>%
@@ -232,7 +270,7 @@ bwt_nat_data =
   knitr::kable(digits = 3)
 ```
 
-```{r}
+``` r
 # data for infant gestational age and maternal nativity
 ga_nat_data =  
   birth_data_un %>%
@@ -245,7 +283,7 @@ ga_nat_data =
   knitr::kable(digits = 3)
 ```
 
-```{r}
+``` r
 # data for Plurality and maternal age
 plur_age_data =  
   birth_data_un %>%
@@ -258,7 +296,7 @@ plur_age_data =
   knitr::kable(digits = 3)
 ```
 
-```{r}
+``` r
 # data for Plurality and maternal nativity
 plur_nat_data = 
   birth_data_un %>%
@@ -271,7 +309,7 @@ plur_nat_data =
   knitr::kable(digits = 3)
 ```
 
-```{r}
+``` r
 # data for infant sex and maternal nativity
 sex_nat_data =  
   birth_data_un %>%
@@ -284,10 +322,7 @@ sex_nat_data =
   knitr::kable(digits = 3)
 ```
 
-
-
-
-```{r}
+``` r
 # data for nativity and maternal age
 birth_nat_age = 
   birth_data_un %>% 
@@ -297,10 +332,9 @@ birth_nat_age =
   summarise(number = n()) %>% 
   spread(key = nativity_age, value = number) %>% 
   knitr::kable(digits = 3)
-  
 ```
 
-```{r}
+``` r
 # data for gestational and maternal age
 birth_ges_age = 
   birth_data_un %>% 
@@ -312,7 +346,7 @@ birth_ges_age =
   knitr::kable(digits = 3)
 ```
 
-```{r}
+``` r
 # data for infant sex and maternal age
 birth_sex_age = 
   birth_data_un %>% 
@@ -323,6 +357,3 @@ birth_sex_age =
   spread(key = sex_age, value = number) %>% 
   knitr::kable(digits = 3)
 ```
-
-
-
