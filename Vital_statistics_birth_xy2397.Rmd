@@ -1,5 +1,6 @@
 ---
 title: "Birth"
+author: "Xue Yang"
 date: "2018/11/07"
 output: github_document
 ---
@@ -13,21 +14,21 @@ library(tidyverse)
 Three different source of the data: community district, zip code and census tract
 ```{r}
 # community district
-birth2000 = haven::read_sas("./data/community_district/cdall_00.sas7bdat")
+birth2000 = haven::read_sas("./birth_data/community_district/cdall_00.sas7bdat")
 names(birth2000)
 ```
 
 
 ```{r}
 # zip code
-birth9901 = haven::read_sas("./data/zip_code/zipall_9901.sas7bdat")
+birth9901 = haven::read_sas("./birth_data/zip_code/zipall_9901.sas7bdat")
 names(birth9901)
 ```
 
 
 ```{r}
 # census tract
-birth0004 = haven::read_sas("./data/census_tract/tractall_0004.sas7bdat")
+birth0004 = haven::read_sas("./birth_data/census_tract/tractall_0004.sas7bdat")
 names(birth0004)
 ```
 
@@ -51,4 +52,15 @@ The problem is that we cannot access *the birth defect cases* data from the webs
 How to combination the birth and death together?
 
 the relationship between Maternal and the infant?
+
+```{r}
+birth_data = 
+  tibble(file_name = list.files(path = "./birth_data/community_district")) %>% 
+  
+  # iterate over file names and read in data for each subject
+  mutate(output = purrr::map(str_c("./birth_data/community_district/", file_name), haven::read_sas)) %>%
+  
+  # unnest the dataframe
+  unnest() 
+```
 
