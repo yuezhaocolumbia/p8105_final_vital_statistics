@@ -86,6 +86,8 @@ birth_data_un %>%
 
 #### Tidy the data for each variables separately
 
+------------------------------------------------------------------------
+
 ``` r
 # data for maternal age
 maternal_age_data = 
@@ -93,7 +95,7 @@ maternal_age_data =
   select(year, cd, cd_name, borough, birthtot, age1tot:age9tot) %>%
   gather(maternal_age, num, age1tot:age9tot) %>% 
   group_by(year, borough, maternal_age) %>% 
-  summarise(number = n()) %>% 
+  summarise(number = sum(num)) %>% 
   spread(key = maternal_age, value = number) %>% 
   knitr::kable(digits = 3)
 ```
@@ -105,7 +107,7 @@ maternal_race_data =
   select(year, cd, cd_name, borough, birthtot, eth_bl_tot:eth_ap_tot) %>%
   gather(maternal_race, num, eth_bl_tot:eth_ap_tot) %>% 
   group_by(year, borough, maternal_race) %>% 
-  summarise(number = n()) %>% 
+  summarise(number = sum(num)) %>% 
   spread(key = maternal_race, value = number) %>% 
   knitr::kable(digits = 3)
 ```
@@ -117,7 +119,7 @@ born_demo_data =
   select(year, cd, cd_name, borough, birthtot, nat1tot:nat2tot) %>%
   gather(born_demo, num, nat1tot:nat2tot) %>% 
   group_by(year, borough, born_demo) %>% 
-  summarise(number = n()) %>% 
+  summarise(number = sum(num)) %>% 
   spread(key = born_demo, value = number) %>% 
   knitr::kable(digits = 3)
 ```
@@ -129,7 +131,7 @@ maternal_anc_data =
   select(year, cd, cd_name, borough, birthtot, ancs1tot:ancs15tot) %>%
   gather(maternal_anc, num, ancs1tot:ancs15tot) %>% 
   group_by(year, borough, maternal_anc) %>% 
-  summarise(number = n()) %>% 
+  summarise(number = sum(num)) %>% 
   spread(key = maternal_anc, value = number) %>% 
   knitr::kable(digits = 3)
 ```
@@ -141,7 +143,7 @@ maternal_birth_place_data =
   select(year, cd, cd_name, borough, birthtot, bpl1tot:bpl_oth_tot) %>%
   gather(maternal_birth_place, num, bpl1tot:bpl_oth_tot) %>% 
   group_by(year, borough, maternal_birth_place) %>% 
-  summarise(number = n()) %>% 
+  summarise(number = sum(num)) %>% 
   spread(key = maternal_birth_place, value = number) %>% 
   knitr::kable(digits = 3)
 ```
@@ -153,7 +155,7 @@ parity_data =
   select(year, cd, cd_name, borough, birthtot, par1tot:par2tot) %>%
   gather(parity, num, par1tot:par2tot) %>% 
   group_by(year, borough, parity) %>% 
-  summarise(number = n()) %>% 
+  summarise(number = sum(num)) %>% 
   spread(key = parity, value = number) %>% 
   knitr::kable(digits = 3)
 ```
@@ -165,7 +167,7 @@ marry_data =
   select(year, cd, cd_name, borough, birthtot, mar1tot:mar2tot) %>%
   gather(marry_status, num, mar1tot:mar2tot) %>% 
   group_by(year, borough, marry_status) %>% 
-  summarise(number = n()) %>% 
+  summarise(number = sum(num)) %>% 
   spread(key = marry_status, value = number) %>% 
   knitr::kable(digits = 3)
 ```
@@ -177,7 +179,7 @@ infant_sex_data =
   select(year, cd, cd_name, borough, birthtot, sex1tot:sex2tot) %>%
   gather(infant_sex, num, sex1tot:sex2tot) %>% 
   group_by(year, borough, infant_sex) %>% 
-  summarise(number = n()) %>% 
+  summarise(number = sum(num)) %>% 
   spread(key = infant_sex, value = number) %>% 
   knitr::kable(digits = 3)
 ```
@@ -189,7 +191,7 @@ birth_weight_data =
   select(year, cd, cd_name, borough, birthtot, bwt1tot:bwt9tot) %>%
   gather(birth_weight, num, bwt1tot:bwt9tot) %>% 
   group_by(year, borough, birth_weight) %>% 
-  summarise(number = n()) %>% 
+  summarise(number = sum(num)) %>% 
   spread(key = birth_weight, value = number) %>% 
   knitr::kable(digits = 3)
 ```
@@ -201,7 +203,7 @@ apg_count_data =
   select(year, cd, cd_name, borough, birthtot, apg1tot:apg5tot) %>%
   gather(apg_count, num, apg1tot:apg5tot) %>% 
   group_by(year, borough, apg_count) %>% 
-  summarise(number = n()) %>% 
+  summarise(number = sum(num)) %>% 
   spread(key = apg_count, value = number) %>% 
   knitr::kable(digits = 3)
 ```
@@ -213,7 +215,7 @@ birth_place_data =
   select(year, cd, cd_name, borough, birthtot, pob1tot:pob5tot) %>%
   gather(birth_place, num, pob1tot:pob5tot) %>% 
   group_by(year, borough, birth_place) %>% 
-  summarise(number = n()) %>% 
+  summarise(number = sum(num)) %>% 
   spread(key = birth_place, value = number) %>% 
   knitr::kable(digits = 3)
 ```
@@ -225,7 +227,7 @@ birth_ges =
   select(year, cd, cd_name, borough, birthtot, ga1tot:ga5tot) %>% 
   gather(key = gestational_age, value = num, ga1tot:ga5tot)  %>% 
   group_by(year, borough, gestational_age) %>% 
-  summarise(number = n()) %>% 
+  summarise(number = sum(num)) %>% 
   spread(key = gestational_age, value = number) %>% 
   knitr::kable(digits = 3)
 ```
@@ -237,7 +239,7 @@ birth_plur =
   select(year, cd, cd_name, borough, birthtot, plur1tot:plur2tot) %>% 
   gather(key = plur, value = num, plur1tot:plur2tot) %>% 
   group_by(year, borough, plur) %>% 
-  summarise(number = n()) %>% 
+  summarise(number = sum(num)) %>% 
   spread(key = plur, value = number) %>% 
   knitr::kable(digits = 3)
 ```
@@ -252,7 +254,7 @@ bwt_age_data =
   select(year, cd, cd_name, borough, birthtot, starts_with("bwt")) %>% 
   gather(bwt_age, num, bwt1ctot_a1:bwt2ctot_a4) %>% 
   group_by(year, borough, bwt_age) %>% 
-  summarise(number = n()) %>% 
+  summarise(number = sum(num)) %>% 
   spread(key = bwt_age, value = number) %>% 
   knitr::kable(digits = 3)
 ```
@@ -265,7 +267,7 @@ bwt_nat_data =
   select(year, cd, cd_name, borough, birthtot, starts_with("bwt")) %>% 
   gather(bwt_nat, num, bwt1ctot_n1:bwt2ctot_n2) %>% 
   group_by(year, borough, bwt_nat) %>% 
-  summarise(number = n()) %>% 
+  summarise(number = sum(num)) %>% 
   spread(key = bwt_nat, value = number) %>% 
   knitr::kable(digits = 3)
 ```
@@ -278,7 +280,7 @@ ga_nat_data =
   select(year, cd, cd_name, borough, birthtot, starts_with("ga")) %>% 
   gather(ga_nat, num, ga1ctot_n1:ga2ctot_n2) %>% 
   group_by(year, borough, ga_nat) %>% 
-  summarise(number = n()) %>% 
+  summarise(number = sum(num)) %>% 
   spread(key = ga_nat, value = number) %>% 
   knitr::kable(digits = 3)
 ```
@@ -291,7 +293,7 @@ plur_age_data =
   select(year, cd, cd_name, borough, birthtot, starts_with("plu")) %>% 
   gather(plur_age, num, plur1tot_a1:plur2tot_a4) %>% 
   group_by(year, borough, plur_age) %>% 
-  summarise(number = n()) %>% 
+  summarise(number = sum(num)) %>% 
   spread(key = plur_age, value = number) %>% 
   knitr::kable(digits = 3)
 ```
@@ -304,7 +306,7 @@ plur_nat_data =
   select(year, cd, cd_name, borough, birthtot, starts_with("plu")) %>% 
   gather(plur_nat, num, plur1tot_n1:plur2tot_n2) %>% 
   group_by(year, borough, plur_nat) %>% 
-  summarise(number = n()) %>% 
+  summarise(number = sum(num)) %>% 
   spread(key = plur_nat, value = number) %>% 
   knitr::kable(digits = 3)
 ```
@@ -317,7 +319,7 @@ sex_nat_data =
   select(year, cd, cd_name, borough, birthtot, starts_with("sex")) %>% 
   gather(sex_nat, num, sex1tot_n1:sex2tot_n2) %>% 
   group_by(year, borough, sex_nat) %>% 
-  summarise(number = n()) %>% 
+  summarise(number = sum(num)) %>% 
   spread(key = sex_nat, value = number) %>% 
   knitr::kable(digits = 3)
 ```
@@ -329,7 +331,7 @@ birth_nat_age =
   select(year, cd, cd_name, borough, birthtot, nat1tot_a1, nat2tot_a1, nat1tot_a2, nat2tot_a2, nat1tot_a3, nat2tot_a3, nat1tot_a4, nat2tot_a4) %>% 
   gather(key = nativity_age, value = num, nat1tot_a1:nat2tot_a4) %>% 
   group_by(year, borough, nativity_age) %>% 
-  summarise(number = n()) %>% 
+  summarise(number = sum(num)) %>% 
   spread(key = nativity_age, value = number) %>% 
   knitr::kable(digits = 3)
 ```
@@ -341,7 +343,7 @@ birth_ges_age =
   select(year, cd, cd_name, borough, birthtot, ga1ctot_a1, ga2ctot_a1, ga1ctot_a2, ga2ctot_a2, ga1ctot_a3, ga2ctot_a3, ga1ctot_a4, ga2ctot_a4) %>% 
   gather(key = ges_age, value = num, ga1ctot_a1:ga2ctot_a4) %>% 
   group_by(year, borough, ges_age) %>% 
-  summarise(number = n()) %>% 
+  summarise(number = sum(num)) %>% 
   spread(key = ges_age, value = number) %>% 
   knitr::kable(digits = 3)
 ```
@@ -353,7 +355,7 @@ birth_sex_age =
   select(year, cd, cd_name, borough, birthtot, sex1tot_a1, sex2tot_a1, sex1tot_a2, sex2tot_a2, sex1tot_a3, sex2tot_a3, sex1tot_a4, sex2tot_a4) %>% 
   gather(key = sex_age, value = num, sex1tot_a1:sex2tot_a4) %>% 
   group_by(year, borough, sex_age) %>% 
-  summarise(number = n()) %>% 
+  summarise(number = sum(num)) %>% 
   spread(key = sex_age, value = number) %>% 
   knitr::kable(digits = 3)
 ```
