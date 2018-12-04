@@ -454,7 +454,7 @@ bwt_age_data =
 
 birth_data_un %>% 
   select(year, cd, birthtot, contains("ctot_a")) %>%
-  select(year, cd, cd_name, borough, birthtot, starts_with("bwt")) %>%
+  select(year, cd, birthtot, starts_with("bwt")) %>%
   gather(bwt, num, bwt1ctot_a1:bwt2ctot_a4) %>% 
   group_by(year, cd, birthtot) %>% 
   summarise(ttl = sum(num, na.rm = TRUE)) %>% 
@@ -462,17 +462,19 @@ birth_data_un %>%
   arrange(desc(percent))
 
 birth_data_un %>%
-  select(starts_with("ga")) %>% 
+  select(starts_with("bwt")) %>% 
+  select(contains("ctot_a")) %>% 
   summarise_all(funs(sum(is.na(.)))) %>% 
   gather(term, num_na, everything()) %>% 
   mutate(percent = num_na/885) 
 
 #no missing data
-birth_ges_nomiss_data =
-  birth_data_un %>% 
-  select(year, cd, cd_name, borough, birthtot, ga1tot:ga5tot) %>%
-  gather(birth_ges, num, ga1tot:ga5tot) %>%
-  arrange(cd, birth_ges, year) %>% 
+bwt_age_nomiss_data =
+  birth_data_un %>%
+  select(year, cd, cd_name, borough, birthtot, contains("ctot_a")) %>%
+  select(year, cd, cd_name, borough, birthtot, starts_with("bwt")) %>% 
+  gather(bwt_age, num, bwt1ctot_a1:bwt2ctot_a4) %>%
+  arrange(cd, bwt_age, year) %>% 
   mutate(num = ifelse(is.na(num) & year != "00", lag(num), num)) %>% 
   mutate(num = ifelse(is.na(num) & year != "00", lag(num, 2), num)) %>% 
   mutate(num = ifelse(is.na(num), 0, num))
