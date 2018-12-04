@@ -125,8 +125,7 @@ nyc_demo_gender = my_data %>%
 
 gender_death_data2 = merge(gender_death_data2, nyc_demo_gender, by = c("gender", "borough", "year")) 
 
-gender_death_data2 %>%
-  filter(gender =="female", year == "2010", gender == "")
+
   
 ```
 
@@ -144,8 +143,7 @@ age_death_data = age_death_data %>%
     ) %>%
   mutate(cause_of_death =  
            substr(age_death_data$cause_of_death, 0, (str_locate(age_death_data$cause_of_death, "age")[,1] -1)))  
-age_death_data = age_death_data %>%
-  mutate(cause_of_death = gsub("c", "x", age_death_data$cause_of_death))
+age_death_data = age_death_data 
 
 # aggregate cd-wise number into borough-wise
 age_death_data = age_death_data %>%
@@ -178,13 +176,32 @@ age_death_data2 = merge(age_death_data, nyc_demo_age, by = c("borough", "age_gro
 # cause of death crossed with race 
 race_death_data = my_tidy_data %>%
    select(cd_name: year, c11:c225) %>%
-     gather (key = "cause_of_death", value = "number", c11:c225) %>%
+     gather (key = "cause_of_death", value = "number", c11:c225) 
+
+race_death_data = race_death_data %>%
   mutate(race = stri_sub(race_death_data$cause_of_death, -1)) %>%
   mutate(
     cause_of_death = 
-      substr(cause_of_death, start = 1, stop = nchar(race_death_data2$cause_of_death)-1)
-                  ) %>%
-  mutate(cause_of_death = gsub("c", "x", race_death_data2$cause_of_death))
+      substr(cause_of_death, start = 1, stop = nchar(race_death_data$cause_of_death)-1)
+                  ) 
+
+# aggregate cd-wise number into borough-wise
+race_death_data = race_death_data %>%
+  group_by(borough, year, race, as.factor(cause_of_death) )%>%
+  summarise(borough_race_death = sum(number, na.rm = TRUE))
+
+# sub-group population data - by race
+nyc_demo_race = my_data %>%
+  select(cd_number, borough, hispanic :black_non_hispanic, year) %>%
+  rename("1" = "hispanic", "3" = "asian_non_hispanic", "4"= "white_non_hispanic", "5" = "black_non_hispanic") %>%
+  gather(key = "race", value = "population_by_race", `1` : `5`)  %>%
+  group_by(borough, race, year) %>%
+  summarise(borough_race_population = sum(population_by_race, na.rm =TRUE)) 
+
+# merge
+race_death_data2 = merge(race_death_data, nyc_demo_race, by = c("borough", "race", "year"))
+
+
 ```
 
 Now I added specific cause of death to the dataset.
