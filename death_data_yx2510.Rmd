@@ -175,6 +175,16 @@ age_death_data2 = age_death_data %>%
   group_by(borough, year, age_group, cause_of_death) %>%
   summarise(borough_age_death = sum(number, na.rm = TRUE))
 
+# aggregate age groups
+age_death_data3 = age_death_data2 %>%
+  ungroup %>%
+  mutate(age_group = case_when(
+    !(age_group  %in% c("1_12months", "28days", "65_69", "70_74", "75_79", "80_84", "85")) ~ "Premature Death",
+    age_group %in% c("65_69", "70_74", "75_79", "80_84", "85") ~ ">65 age death",
+    age_group == "28days" ~ "new born death",
+    age_group == "1_12months" ~ "1_12months death"
+  ) )
+
 
 ```
 
@@ -232,6 +242,7 @@ replace_cd = function(df){
 total_death_data = replace_cd(total_death_data)
 gender_death_data2 = replace_cd(gender_death_data2)
 race_death_data2 = replace_cd(race_death_data2)
+age_death_data2 = replace_cd(age_death_data2)
 
 ```
 
@@ -515,7 +526,7 @@ theme(
 ggarrange(male1, female1, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
 ```
 
-#### by. race
+#### 3.5 by. race
 ```{r}
 
 race_death_data2 = race_death_data2 %>%
@@ -530,7 +541,7 @@ race_death_data2 = race_death_data2 %>%
 # identify the top leading cause in NYC
 race_death_cause  = race_death_data2%>%
   group_by(race, cause_of_death) %>%
-  summarise(cs_death_race = sum(borough_race_death)/11)  %>% # average yearly death from 2004 to 2014
+  summarise(cs_death_race = sum(borough_race_death)/11)  %>% # average yearly death from 2004 to
   top_n(n = 10, wt = cs_death_race) %>%
   arrange(race, desc(cs_death_race)) 
 
@@ -615,5 +626,213 @@ theme(
   ) 
 
 ggarrange(hispanic, asian, white, black, ncol=2, nrow=2, common.legend = TRUE, legend="bottom")
+```
+##### by race and borough
+```{r}
+race_death_cd = merge(race_death_data2, race_death_cause) %>%
+  group_by(race, cause_of_death, borough) %>%
+  summarise(race_ds_br = sum(borough_race_death)/10) 
+
+race_death_cd %>% 
+  filter(race == "Hispanic") %>%
+  ggplot(aes(x = reorder(cause_of_death, race_ds_br), y = race_ds_br, fill = borough)) +
+  geom_bar(stat = "identity") +
+
+  labs(x = "Cause of death", 
+         y = "Number of death", 
+         title = "leading cause of death for Hispanic") + 
+theme(
+  panel.background = element_rect(fill = "white",
+                                colour = "white",
+                                size = 0.5, linetype = "solid"),
+  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey"), 
+  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey")
+  ) +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6))
+
+race_death_cd %>% 
+  filter(race == "Asian Non-Hispanic") %>%
+  ggplot(aes(x = reorder(cause_of_death, race_ds_br), y = race_ds_br, fill = borough)) +
+  geom_bar(stat = "identity") +
+
+  labs(x = "Cause of death", 
+         y = "Number of death", 
+         title = "leading cause of death for Asian") + 
+theme(
+  panel.background = element_rect(fill = "white",
+                                colour = "white",
+                                size = 0.5, linetype = "solid"),
+  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey"), 
+  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey")
+  ) +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6))
+
+ 
+race_death_cd %>% 
+  filter(race == "White Non-Hispanic") %>%
+  ggplot(aes(x = reorder(cause_of_death, race_ds_br), y = race_ds_br, fill = borough)) +
+  geom_bar(stat = "identity") +
+
+  labs(x = "Cause of death", 
+         y = "Number of death", 
+         title = "leading cause of death for White") + 
+theme(
+  panel.background = element_rect(fill = "white",
+                                colour = "white",
+                                size = 0.5, linetype = "solid"),
+  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey"), 
+  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey")
+  ) +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6))
+  
+
+  
+race_death_cd %>% 
+  filter(race == "Black Non-hispanic") %>%
+  ggplot(aes(x = reorder(cause_of_death, race_ds_br), y = race_ds_br, fill = borough)) +
+  geom_bar(stat = "identity") +
+
+  labs(x = "Cause of death", 
+         y = "Number of death", 
+         title = "leading cause of death for Black") + 
+theme(
+  panel.background = element_rect(fill = "white",
+                                colour = "white",
+                                size = 0.5, linetype = "solid"),
+  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey"), 
+  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey")
+  ) +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6))
+  
+
+```
+
+#### 3.6 by age group 
+```{r}
+# leading cause of death in each age group
+age_death_cause = age_death_data3 %>%
+  group_by(age_group, cause_of_death) %>%
+  summarise(av_death_age = sum(borough_age_death)/11 ) %>%
+  top_n(n = 10, wt = av_death_age) %>%
+  arrange(age_group, desc(av_death_age)) 
+
+# not much useful info in the newborn and under 1 group 
+age_death_cause = age_death_cause %>%
+  filter(age_group == "Premature Death" | age_group == ">65 age death")
+
+over_65 = age_death_cause %>%
+  filter(age_group == ">65 age death") %>%
+  ggplot(aes(x = reorder(cause_of_death, av_death_age), y = av_death_age)) +
+  geom_bar(stat = "identity", fill = "antiquewhite1") + 
+  labs(x = "Cause of death", 
+         y = "Number of death", 
+         title = "leading cause of death for over 65 year old group ") + 
+theme(
+  panel.background = element_rect(fill = "white",
+                                colour = "white",
+                                size = 0.5, linetype = "solid"),
+  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey"), 
+  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey")
+  ) +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6))
+
+
+premature = age_death_cause %>%
+  filter(age_group == "Premature Death") %>%
+  ggplot(aes(x = reorder(cause_of_death, av_death_age), y = av_death_age)) +
+  geom_bar(stat = "identity", fill = "cadetblue2") + 
+  labs(x = "Cause of death", 
+         y = "Number of death", 
+         title = "leading cause of premature death ") + 
+theme(
+  panel.background = element_rect(fill = "white",
+                                colour = "white",
+                                size = 0.5, linetype = "solid"),
+  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey"), 
+  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey")
+  ) +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6))
+
+ggarrange(over_65, premature, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
+```
+We see that for 1-12 months age group, the leading cause of deaths are "others". For less than 28 days, the leading cause of deaths are also "others". For 65-69 age group the leading cause of death is malignant neoplasms (cancer). For >85 years old, diseases of the heart is the leading cause.
+
+
+#### age borough
+```{r}
+age_death_data3 = merge(age_death_data3, age_death_cause) %>%
+  group_by(cause_of_death, age_group, borough) %>%
+  summarise(br_death_age = sum(av_death_age)/11) 
+
+over_65_2 = age_death_data3 %>%
+  filter(age_group == ">65 age death") %>%
+  ggplot(aes(x = reorder(cause_of_death, br_death_age), y = br_death_age, fill = borough)) +
+  geom_bar(stat = "identity") + 
+  labs(x = "Cause of death", 
+         y = "Number of death", 
+         title = "leading cause of death for over 65 year old group ") + 
+theme(
+  panel.background = element_rect(fill = "white",
+                                colour = "white",
+                                size = 0.5, linetype = "solid"),
+  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey"), 
+  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey")
+  ) +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6))
+
+premature2 = age_death_data3 %>%
+  filter(age_group == "Premature Death") %>%
+  ggplot(aes(x = reorder(cause_of_death, br_death_age), y = br_death_age, fill = borough)) +
+  geom_bar(stat = "identity") + 
+  labs(x = "Cause of death", 
+         y = "Number of death", 
+         title = "leading cause of death for over 65 year old group ") + 
+theme(
+  panel.background = element_rect(fill = "white",
+                                colour = "white",
+                                size = 0.5, linetype = "solid"),
+  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey"), 
+  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey")
+  ) +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6))
+
+```
+
+#### change of death number by age group 
+```{r}
+age_death_data3 %>%
+  group_by(age_group, year)  %>%
+  summarise(total_death = sum(borough_age_death)) %>%
+  ggplot(aes(x = year, y = total_death, color = age_group)) +
+  geom_line() +
+   labs(title = "Number of death in different age group in New York City",
+             x = "Year",
+             y = "Number of death")  + 
+theme(
+  panel.background = element_rect(fill = "white",
+                                colour = "white",
+                                size = 0.5, linetype = "solid"),
+  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey"), 
+  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey")
+  ) +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6))
 ```
 

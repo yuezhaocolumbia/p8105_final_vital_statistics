@@ -19,19 +19,27 @@ file_name = tibble(
   id = list.files("./birth_data/community_district")
 )
 
-birth_data_cd = file_name %>%
+birth_data = file_name %>%
   mutate(infor = map(str_c("./birth_data/community_district/", id), read_sas)) %>% 
   separate(id, c("name", "year", "del"), sep = c(6, 8)) %>% 
   select(-name, -del) %>% 
   mutate(year = str_c("20", year), year = as.numeric(year))
 
 # import cd code data
-cd_code_data = read_csv("./data/New_York_City_Population_By_Community_Districts2.csv") %>%
- janitor::clean_names() %>%
+cd_code_data = 
+  read_csv("./data/New_York_City_Population_By_Community_Districts 16.09.03.csv") %>%
+  janitor::clean_names() %>%
   select(borough, cd_number, cd_name) %>% 
-  rename(cd = cd_number)
+  rename(cd = cd_number) %>% 
+  mutate(cd = ifelse(borough == "Bronx", cd + 200, cd)) %>% 
+  mutate(cd = ifelse(borough == "Brooklyn", cd + 300, cd)) %>% 
+  mutate(cd = ifelse(borough == "Manhattan", cd + 100, cd)) %>% 
+  mutate(cd = ifelse(borough == "Queens", cd + 400, cd)) %>% 
+  mutate(cd = ifelse(borough == "Staten Island", cd + 500, cd)) 
 
-birth_data_cd_un = birth_data_cd %>% 
+# join two data
+birth_data_un = 
+  birth_data %>% 
   unnest() %>% 
   left_join(cd_code_data, by = "cd") 
 ```
@@ -604,10 +612,9 @@ maternal_age_plot_data =
   select(year, cd, cd_name, borough, birthtot, age1tot:age9tot) %>%
   gather(maternal_age, num, age1tot:age9tot) %>%
   arrange(cd, maternal_age, year) %>% 
-  mutate(num = ifelse(is.na(num) & year != "00", lag(num), num)) %>% 
-  mutate(num = ifelse(is.na(num) & year != "00", lag(num, 2), num)) %>% 
+  mutate(num = ifelse(is.na(num) & year != 2000, lag(num), num)) %>% 
+  mutate(num = ifelse(is.na(num) & year != 2000, lag(num, 2), num)) %>% 
   mutate(num = ifelse(is.na(num), 0, num)) %>% 
-  mutate(year = str_c("20", year), year = as.numeric(year)) %>% 
   mutate(new_age = case_when(
     maternal_age %in% c("age1tot", "age2tot") ~ "< 18",
     maternal_age %in% c("age3tot", "age4tot") ~ "18 - 24",
@@ -619,7 +626,8 @@ maternal_age_plot_data =
   group_by(year, borough, new_age) %>% 
   summarise(number = sum(num)) 
   
-
+#useful
+#the birth trend in different maternal age in NYC
 maternal_age_plot_data %>%
   group_by(year, new_age) %>% 
   summarise(number = sum(number)) %>% 
@@ -633,6 +641,300 @@ maternal_age_plot_data %>%
   theme_bw() +
   scale_x_continuous(breaks=seq(2000, 2014, 1)) +
   viridis::scale_color_viridis(discrete = TRUE)
+
+#useful
+#the birth trend in different maternal age in NYC for each boro
+maternal_age_plot_data %>%
+  group_by(year, borough) %>% 
+  mutate(percent = number/sum(number)) %>% 
+  ggplot(aes(x = year, y = percent, color = new_age)) +
+  geom_point() +
+  geom_line() +
+  facet_grid( ~ borough) +
+  labs(title = "",
+      y = "Proportion of number of birth",
+      x = "Year",
+      color = "Maternal Age") +
+  theme_bw() +
+  scale_x_continuous(breaks=seq(2000, 2014, 5)) +
+  viridis::scale_color_viridis(discrete = TRUE) 
+  #theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
   
+```
+
+plot for for maternal nativity
+```{r}
+ma_nat_plot_data =
+  birth_data_un %>% 
+  select(year, cd, cd_name, borough, birthtot, nat1tot:nat2tot) %>%
+  gather(ma_nat, num, nat1tot:nat2tot) %>%
+  arrange(cd, ma_nat, year) %>% 
+  mutate(num = ifelse(is.na(num) & year != 2000, lag(num), num)) %>% 
+  mutate(num = ifelse(is.na(num) & year != 2000, lag(num, 2), num)) %>% 
+  mutate(num = ifelse(is.na(num), 0, num)) %>% 
+  mutate(new_ma_nat = ifelse(ma_nat == "nat1tot", "US Born", "Foreign Born")) %>% 
+  group_by(year, borough, new_ma_nat) %>% 
+  summarise(number = sum(num))
+
+#the birth trend in different maternal nativity in NYC
+ma_nat_plot_data %>%
+  group_by(year, new_ma_nat) %>% 
+  summarise(number = sum(number)) %>% 
+  ggplot(aes(x = year, y = number, color = new_ma_nat)) +
+  geom_point() +
+  geom_line() +
+  labs(title = "",
+      y = "Number of  birth",
+      x = "Year",
+      fill = "Maternal Nativity") +
+  theme_bw() +
+  scale_x_continuous(breaks=seq(2000, 2014, 1)) +
+  viridis::scale_color_viridis(discrete = TRUE)
+
+#the birth trend in different maternal nativity in NYC for each boro
+ma_nat_plot_data %>%
+  group_by(year, borough) %>% 
+  mutate(percent = number/sum(number)) %>% 
+  ggplot(aes(x = year, y = percent, color = new_ma_nat)) +
+  geom_point() +
+  geom_line() +
+  facet_grid( ~ borough) +
+  labs(title = "",
+      y = "Proportion of number of birth",
+      x = "Year",
+      color = "Maternal Nativity") +
+  theme_bw() +
+  scale_x_continuous(breaks=seq(2000, 2014, 5)) +
+  viridis::scale_color_viridis(discrete = TRUE) 
+  #theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+```
+
+
+#data for parity
+
+```{r}
+parity_plot_data =
+  birth_data_un %>% 
+  select(year, cd, cd_name, borough, birthtot, par1tot:par2tot) %>%
+  gather(parity, num, par1tot:par2tot) %>%
+  arrange(cd, parity, year) %>% 
+  mutate(num = ifelse(is.na(num) & year != 2000, lag(num), num)) %>% 
+  mutate(num = ifelse(is.na(num) & year != 2000, lag(num, 2), num)) %>% 
+  mutate(num = ifelse(is.na(num), 0, num)) %>% 
+  mutate(new_parity = ifelse(parity == "par1tot", "First live birth", "Not first live birth")) %>% 
+  group_by(year, borough, new_parity) %>% 
+  summarise(number = sum(num)) 
+
+#the birth trend in different Parity in NYC
+parity_plot_data %>%
+  group_by(year, new_parity) %>% 
+  summarise(number = sum(number)) %>% 
+  ggplot(aes(x = year, y = number, fill = new_parity)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  labs(title = "",
+      y = "Number of  birth",
+      x = "Year",
+      fill = "Parity") +
+  theme_bw() +
+  scale_x_continuous(breaks=seq(2000, 2014, 1)) +
+  viridis::scale_fill_viridis(discrete = TRUE)
+
+#the birth trend in different maternal nativity in NYC for each boro
+parity_plot_data %>%
+  group_by(year, borough) %>% 
+  mutate(percent = number/sum(number)) %>% 
+  ggplot(aes(x = year, y = percent, fill = new_parity)) +
+  geom_bar(stat = "identity", position = "stack") +
+  facet_grid( ~ borough) +
+  labs(title = "",
+      y = "Proportion of number of birth",
+      x = "Year",
+      fill = "Parity") +
+  theme_bw() +
+  scale_x_continuous(breaks=seq(2000, 2014, 5)) +
+  viridis::scale_fill_viridis(discrete = TRUE) +
+  theme(legend.position = "bottom")
+```
+
+plot for maternal marital status
+
+```{r}
+# data for maternal marital status 
+marry_plot_data =
+  birth_data_un %>% 
+  select(year, cd, cd_name, borough, birthtot, mar1tot:mar2tot) %>%
+  gather(marry_status, num, mar1tot:mar2tot) %>%
+  arrange(cd, marry_status, year) %>% 
+  mutate(num = ifelse(is.na(num) & year != 2000, lag(num), num)) %>% 
+  mutate(num = ifelse(is.na(num) & year != 2000, lag(num, 2), num)) %>% 
+  mutate(num = ifelse(is.na(num), 0, num)) %>% 
+  mutate(new_marry_status = ifelse(marry_status == "mar1tot", "Married", "Not Married")) %>% 
+  group_by(year, borough, new_marry_status) %>% 
+  summarise(number = sum(num))  
+
+#may useful
+#the birth trend in different marry status in NYC
+marry_plot_data %>%
+  group_by(year, new_marry_status) %>% 
+  summarise(number = sum(number)) %>% 
+  ggplot(aes(x = year, y = number, color = new_marry_status)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "",
+      y = "Number of  birth",
+      x = "Year",
+      color = "Marital status") +
+  theme_bw() +
+  scale_x_continuous(breaks=seq(2000, 2014, 1)) +
+  viridis::scale_color_viridis(discrete = TRUE)
+
+#the birth trend in different marry status in NYC for each boro
+marry_plot_data %>%
+  group_by(year, borough) %>% 
+  mutate(percent = number/sum(number)) %>% 
+  ggplot(aes(x = year, y = percent, color = new_marry_status)) +
+  geom_line() +
+  geom_point() +
+  facet_grid( ~ borough) +
+  labs(title = "",
+      y = "Proportion of number of birth",
+      x = "Year",
+      color = "Marital status") +
+  theme_bw() +
+  scale_x_continuous(breaks=seq(2000, 2014, 5)) +
+  viridis::scale_color_viridis(discrete = TRUE) +
+  theme(legend.position = "bottom")
+```
+
+infant sex
+
+```{r}
+# data for infant sex
+infant_sex_plot_data =
+  birth_data_un %>% 
+  select(year, cd, cd_name, borough, birthtot, sex1tot:sex2tot) %>%
+  gather(infant_sex, num, sex1tot:sex2tot) %>%
+  arrange(cd, infant_sex, year) %>% 
+  mutate(num = ifelse(is.na(num) & year != 2000, lag(num), num)) %>% 
+  mutate(num = ifelse(is.na(num) & year != 2000, lag(num, 2), num)) %>% 
+  mutate(num = ifelse(is.na(num), 0, num)) %>% 
+  mutate(new_infant_sex = ifelse(infant_sex == "sex1tot", "Male", "Female")) %>% 
+  group_by(year, borough, new_infant_sex) %>% 
+  summarise(number = sum(num))  
+
+#the birth trend in different sex in NYC
+infant_sex_plot_data %>%
+  group_by(year, new_infant_sex) %>% 
+  summarise(number = sum(number)) %>% 
+  ggplot(aes(x = year, y = number, fill = new_infant_sex)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  labs(title = "",
+      y = "Number of  birth",
+      x = "Year",
+      fill = "Infant Sex") +
+  theme_bw() +
+  scale_x_continuous(breaks=seq(2000, 2014, 1)) +
+  viridis::scale_fill_viridis(discrete = TRUE)
+
+# # of male is always larger
+#the birth trend in different sex in NYC for each boro
+infant_sex_plot_data %>%
+  group_by(year, borough) %>% 
+  mutate(percent = number/sum(number)) %>% 
+  ggplot(aes(x = year, y = percent, color = new_infant_sex)) +
+  geom_line() +
+  geom_point() +
+  facet_grid( ~ borough) +
+  labs(title = "",
+      y = "Proportion of number of birth",
+      x = "Year",
+      color = "Marital status") +
+  theme_bw() +
+  scale_x_continuous(breaks=seq(2000, 2014, 5)) +
+  viridis::scale_color_viridis(discrete = TRUE) +
+  theme(legend.position = "bottom")
+```
+
+plot for bwt
+
+```{r}
+birth_weight_plot_data =
+  birth_data_un %>% 
+  select(year, cd, cd_name, borough, birthtot, bwt1tot:bwt9tot) %>%
+  gather(birth_weight, num, bwt1tot:bwt9tot) %>%
+  arrange(cd, birth_weight, year) %>% 
+  mutate(num = ifelse(is.na(num) & year != 2000, lag(num), num)) %>% 
+  mutate(num = ifelse(is.na(num) & year != 2000, lag(num, 2), num)) %>% 
+  mutate(num = ifelse(is.na(num), 0, num)) %>% 
+  mutate(new_birth_weight = case_when(
+    birth_weight %in% c("bwt1tot", "bwt2tot") ~ "< 1000g",
+    birth_weight %in% c("bwt3tot", "bwt4tot") ~ "1000g - 1999g",
+    birth_weight %in% c("bwt5tot", "bwt6tot") ~ "2000g - 2999g",
+    birth_weight %in% c("bwt7tot", "bwt8tot") ~ "3000g - 3999g",
+    birth_weight == "bwt9tot" ~ "4000+g"
+  )) %>% 
+  group_by(year, borough, new_birth_weight) %>% 
+  summarise(number = sum(num)) 
+
+#may useful
+#the birth trend in different bwt in NYC
+birth_weight_plot_data %>%
+  group_by(year, new_birth_weight) %>% 
+  summarise(number = sum(number)) %>% 
+  ggplot(aes(x = year, y = number, color = new_birth_weight)) +
+  geom_point() +
+  geom_line() +
+  labs(title = "",
+      y = "Number of  birth",
+      x = "Year",
+      color = "Infant birthweight") +
+  theme_bw() +
+  scale_x_continuous(breaks=seq(2000, 2014, 1)) +
+  viridis::scale_color_viridis(discrete = TRUE) +
+  theme(legend.position = "bottom")
+
+
+#the birth trend in different bwt in NYC for each boro
+birth_weight_plot_data %>%
+  group_by(year, borough) %>% 
+  mutate(percent = number/sum(number)) %>% 
+  ggplot(aes(x = year, y = percent, color = new_birth_weight)) +
+  geom_point() +
+  geom_line() +
+  facet_grid( ~ borough) +
+  labs(title = "",
+      y = "Proportion of number of birth",
+      x = "Year",
+      color = "Infant birthweight") +
+  theme_bw() +
+  scale_x_continuous(breaks=seq(2000, 2014, 5)) +
+  viridis::scale_color_viridis(discrete = TRUE) +
+  theme(legend.position = "bottom")
+```
+
+cross 
+
+bwt x age
+```{r}
+bwt_age_plot_data =
+  birth_data_un %>%
+  select(year, cd, cd_name, borough, birthtot, contains("ctot_a")) %>%
+  select(year, cd, cd_name, borough, birthtot, starts_with("bwt")) %>% 
+  gather(bwt_age, num, bwt1ctot_a1:bwt2ctot_a4) %>%
+  arrange(cd, bwt_age, year) %>% 
+  mutate(num = ifelse(is.na(num) & year != 2000, lag(num), num)) %>% 
+  mutate(num = ifelse(is.na(num) & year != 2000, lag(num, 2), num)) %>% 
+  mutate(num = ifelse(is.na(num), 0, num)) %>% 
+  separate(bwt_age, c("bwt", "age"), sep = "ctot_") %>%
+  mutate(new_bwt = ifelse(bwt == "bwt1", "< 2500g", "2500+g"),
+         new_age = case_when(
+    age == "a1" ~ "< 20",
+    age == "a2" ~ "20 - 20",
+    age == "a3" ~ "30 - 39",
+    TRUE                      ~  "40 +"
+  )) %>% 
+  group_by(year, borough, new_bwt, new_age) %>% 
+  summarise(number = sum(num))
+
 ```
 
