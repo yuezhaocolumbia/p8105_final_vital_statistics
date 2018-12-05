@@ -454,7 +454,7 @@ bwt_age_data =
 
 birth_data_un %>% 
   select(year, cd, birthtot, contains("ctot_a")) %>%
-  select(year, cd, cd_name, borough, birthtot, starts_with("bwt")) %>%
+  select(year, cd, birthtot, starts_with("bwt")) %>%
   gather(bwt, num, bwt1ctot_a1:bwt2ctot_a4) %>% 
   group_by(year, cd, birthtot) %>% 
   summarise(ttl = sum(num, na.rm = TRUE)) %>% 
@@ -462,17 +462,18 @@ birth_data_un %>%
   arrange(desc(percent))
 
 birth_data_un %>%
-  select(starts_with("ga")) %>% 
+  select(starts_with("bwt")) %>% 
+  select(contains("ctot_a")) %>% 
   summarise_all(funs(sum(is.na(.)))) %>% 
   gather(term, num_na, everything()) %>% 
   mutate(percent = num_na/885) 
 
-#no missing data
-birth_ges_nomiss_data =
-  birth_data_un %>% 
-  select(year, cd, cd_name, borough, birthtot, ga1tot:ga5tot) %>%
-  gather(birth_ges, num, ga1tot:ga5tot) %>%
-  arrange(cd, birth_ges, year) %>% 
+bwt_age_nomiss_data =
+  birth_data_un %>%
+  select(year, cd, cd_name, borough, birthtot, contains("ctot_a")) %>%
+  select(year, cd, cd_name, borough, birthtot, starts_with("bwt")) %>% 
+  gather(bwt_age, num, bwt1ctot_a1:bwt2ctot_a4) %>%
+  arrange(cd, bwt_age, year) %>% 
   mutate(num = ifelse(is.na(num) & year != "00", lag(num), num)) %>% 
   mutate(num = ifelse(is.na(num) & year != "00", lag(num, 2), num)) %>% 
   mutate(num = ifelse(is.na(num), 0, num))
@@ -491,6 +492,33 @@ sex_nat_data =
   summarise(number = sum(num)) %>% 
   spread(key = sex_nat, value = number) %>% 
   knitr::kable(digits = 3)
+
+birth_data_un %>% 
+  select(year, cd, birthtot, contains("tot_n")) %>%
+  select(year, cd, birthtot, starts_with("sex")) %>%
+  gather(sex, num, sex1tot_n1:sex2tot_n2) %>% 
+  group_by(year, cd, birthtot) %>% 
+  summarise(ttl = sum(num, na.rm = TRUE)) %>% 
+  mutate(delta = birthtot - ttl, percent = delta/birthtot) %>% 
+  arrange(desc(percent))
+
+birth_data_un %>%
+  select(contains("tot_n")) %>% 
+  select(starts_with("sex")) %>% 
+  summarise_all(funs(sum(is.na(.)))) %>% 
+  gather(term, num_na, everything()) %>% 
+  mutate(percent = num_na/885) 
+
+#no missing data
+sex_nat_nomiss_data =
+  birth_data_un %>%
+  select(year, cd, cd_name, borough, birthtot, contains("tot_n")) %>%
+  select(year, cd, cd_name, borough, birthtot, starts_with("sex")) %>% 
+  gather(sex_nat, num, sex1tot_n1:sex2tot_n2) %>%
+  arrange(cd, sex_nat, year) %>% 
+  mutate(num = ifelse(is.na(num) & year != "00", lag(num), num)) %>% 
+  mutate(num = ifelse(is.na(num) & year != "00", lag(num, 2), num)) %>% 
+  mutate(num = ifelse(is.na(num), 0, num))
 ```
 
 
@@ -504,20 +532,32 @@ birth_nat_age =
   summarise(number = sum(num)) %>% 
   spread(key = nativity_age, value = number) %>% 
   knitr::kable(digits = 3)
+
+birth_data_un %>% 
+  select(year, cd, birthtot, nat1tot_a1, nat2tot_a1, nat1tot_a2, nat2tot_a2, nat1tot_a3, nat2tot_a3, nat1tot_a4, nat2tot_a4) %>%
+  gather(nativity_age, num, nat1tot_a1:nat2tot_a4) %>% 
+  group_by(year, cd, birthtot) %>% 
+  summarise(ttl = sum(num, na.rm = TRUE)) %>% 
+  mutate(delta = birthtot - ttl, percent = delta/birthtot) %>% 
+  arrange(desc(percent))
+
+birth_data_un %>%
+  select(nat1tot_a1, nat2tot_a1, nat1tot_a2, nat2tot_a2, nat1tot_a3, nat2tot_a3, nat1tot_a4, nat2tot_a4) %>% 
+  summarise_all(funs(sum(is.na(.)))) %>% 
+  gather(term, num_na, everything()) %>% 
+  mutate(percent = num_na/885) 
+
+birth_nat_age_nomiss_data =
+  birth_data_un %>% 
+  select(year, cd, cd_name, borough, birthtot, nat1tot_a1, nat2tot_a1, nat1tot_a2, nat2tot_a2, nat1tot_a3, nat2tot_a3, nat1tot_a4, nat2tot_a4) %>%
+  gather(nativity_age, num, nat1tot_a1:nat2tot_a4) %>%
+  arrange(cd, nativity_age, year) %>% 
+  mutate(num = ifelse(is.na(num) & year != "00", lag(num), num)) %>% 
+  mutate(num = ifelse(is.na(num) & year != "00", lag(num, 2), num)) %>% 
+  mutate(num = ifelse(is.na(num), 0, num))
   
 ```
 
-```{r}
-# data for gestational and maternal age
-birth_ges_age = 
-  birth_data_un %>% 
-  select(year, cd, cd_name, borough, birthtot, ga1ctot_a1, ga2ctot_a1, ga1ctot_a2, ga2ctot_a2, ga1ctot_a3, ga2ctot_a3, ga1ctot_a4, ga2ctot_a4) %>% 
-  gather(key = ges_age, value = num, ga1ctot_a1:ga2ctot_a4) %>% 
-  group_by(year, borough, ges_age) %>% 
-  summarise(number = sum(num)) %>% 
-  spread(key = ges_age, value = number) %>% 
-  knitr::kable(digits = 3)
-```
 
 ```{r}
 # data for infant sex and maternal age
@@ -529,4 +569,27 @@ birth_sex_age =
   summarise(number = sum(num)) %>% 
   spread(key = sex_age, value = number) %>% 
   knitr::kable(digits = 3)
+
+birth_data_un %>% 
+  select(year, cd, birthtot, sex1tot_a1, sex2tot_a1, sex1tot_a2, sex2tot_a2, sex1tot_a3, sex2tot_a3, sex1tot_a4, sex2tot_a4) %>%
+  gather(sex_age, num, sex1tot_a1:sex2tot_a4) %>% 
+  group_by(year, cd, birthtot) %>% 
+  summarise(ttl = sum(num, na.rm = TRUE)) %>% 
+  mutate(delta = birthtot - ttl, percent = delta/birthtot) %>% 
+  arrange(desc(percent))
+
+birth_data_un %>%
+  select(sex1tot_a1, sex2tot_a1, sex1tot_a2, sex2tot_a2, sex1tot_a3, sex2tot_a3, sex1tot_a4, sex2tot_a4) %>% 
+  summarise_all(funs(sum(is.na(.)))) %>% 
+  gather(term, num_na, everything()) %>% 
+  mutate(percent = num_na/885) 
+
+birth_sex_age_nomiss_data =
+  birth_data_un %>% 
+  select(year, cd, cd_name, borough, birthtot, sex1tot_a1, sex2tot_a1, sex1tot_a2, sex2tot_a2, sex1tot_a3, sex2tot_a3, sex1tot_a4, sex2tot_a4) %>%
+  gather(sex_age, num, sex1tot_a1:sex2tot_a4) %>%
+  arrange(cd, sex_age, year) %>% 
+  mutate(num = ifelse(is.na(num) & year != "00", lag(num), num)) %>% 
+  mutate(num = ifelse(is.na(num) & year != "00", lag(num, 2), num)) %>% 
+  mutate(num = ifelse(is.na(num), 0, num))
 ```
