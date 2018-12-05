@@ -1,0 +1,16 @@
+---
+title: "About the Project"
+output: 
+  html_document:
+    self_contained: no
+    highlight: haddock
+    toc: true
+    toc_float:
+      collapse: true
+      smooth_scroll: false
+      author: "Yi Xiao(yx2510)........"
+      date: "December 5, 2018"
+      
+---
+ 
+
