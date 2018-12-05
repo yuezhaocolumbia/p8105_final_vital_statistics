@@ -1,0 +1,77 @@
+---
+output: 
+  html_document:
+     toc: true
+     toc_float: true
+---
+
+<br>
+<br>
+  
+![](http://www.columbia.edu/~sw2206/cu_mailman_logo.png)  
+<br>
+  
+## **Vital Statistics Data Analysis in New York City | DSI | Final Project**
+
+<br>
+
+### Yi Xiao(yx2510) | Candace Haghighi | Nicholas Pantaleo | Carolina Downie
+
+
+***
+#  **Motivation**
+In July 2016, the Centers for Medicare and Medicaid's "Hospital Compare" program (a consumer-oriented website that gives information about how well hospitals provide care to their patients) rolled out a new Overall Hospital Quality Star Rating, which rated hospitals between 1 and 5 stars based on a variety of measures. This roll out was  [controversial](https://www.usnews.com/news/articles/2016-07-27/medicare-releases-controversial-hospital-star-ratings), with many hospitals criticizing the rankings. One major complaint was that  major hospitals that consistently score highly in US News & World Reports rankings and other commercial rankings did not score highly on the [Medicare rankings](https://www.npr.org/sections/health-shots/2016/07/27/487633215/many-well-known-hospitals-fail-to-score-high-in-medicare-rankings), and instead relatively obscure hospitals received the highest rating (a rating of 5 stars). 
+
+<br>
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/xTQKZP_36tE" frameborder="0" gesture="media" allow="encrypted-media" allowfullscreen></iframe>
+
+<br>
+
+For our final Data Science project, we decided to analyze the Medicare data to try to assess some of these claims. 
+
+#  **Data Sources**
+
+* The [Hospital General Information](https://data.medicare.gov/Hospital-Compare/Hospital-General-Information/xubh-q36u/data) dataset is published by the Centers for Medicare & Medicaid Services and contains information about all hospitals in the United States (and U.S. Territories) that have been registered with Medicare. According to the Medicare [website](https://data.medicare.gov/Hospital-Compare/Hospital-General-Information/xubh-q36u/about), this dataset was created in May 2014 and was last updated in October 2017. We downloaded the dataset as a csv file. More information about hospital ratings methodology can be found [here](https://www.qualitynet.org/dcs/ContentServer?c=Page&pagename=QnetPublic%2FPage%2FQnetTier3&cid=1228775957165) and [here](http://www.hcahpsonline.org/Files/October_2017_Star%20Ratings_Tech%20Notes.pdf). 
+
+
+* The Best Hospitals Honor Roll is a list of the top 20 hospitals that had the highest ratings across all 16 Best Hospital specialties, nine procedures, and condition ratings. Total points for hospitals on the Best Hospital Honor Roll list are out of a maximum of 448. We scraped the 
+[2016-2017 Best Hospitals Honor Roll](https://web.archive.org/web/20160816171510/http://health.usnews.com/health-care/best-hospitals/articles/best-hospitals-honor-roll-and-overview) from the web using CSS selectors. 
+
+More information about the US News & World Reports methodology for the 2016-2017 rankings can be found [here](http://web.archive.org/web/20160910084826/http://static.usnews.com:80/documents/health/best-hospitals/BH_Methodology_2016-17.pdf).   
+
+# **Analyses**
+
+Please see our [video](https://youtu.be/xTQKZP_36tE) for an narrated screencast of our analysis. 
+
+Questions we were interested in included:
+
+* What was the geographic distribution of ratings? Did areas of the country that are known for having well-known hospital systems (eg NYC, Boston) have a lot of high Medicare scores? In what areas of the country were there hospitals with the lowest scores? 
+
+The plots that address these questions can be found [here](https://carolinadownie.shinyapps.io/p8105_finalproject_shiny/). 
+
+* How did the distribution of ratings vary by hospital ownership type? 
+
+* Were there important differences in the Top 20 Hospitals in 2016-2017 as ranked by [US News and World Reports](https://web.archive.org/web/20160816171510/http://health.usnews.com/health-care/best-hospitals/articles/best-hospitals-honor-roll-and-overview) and the corresponding 2016 Medicare scores for these hospitals (i.e. were the hospitals' complaints justified)? 
+
+The plots that adress these questions can be found [here](Hospital_flexdashboard.html). 
+
+* Can we make a logistic model for patient satisfaction score based on other known hospital ranking criteria? 
+
+The preliminary model we created can be found [here](Model_Page.html). 
+
+
+# **Conclusions and Future Directions**
+
+Our analysis suggests that some of the criticisms of the Medicare Hospital Star rating system may be valid. There was an unexpected geographical distribution of 5-star hospitals (for example, there were more 5 star hospitals in South Dakota than in New York). However, the comparison of the Medicare Hospital rankings and the US News & Reports rankings were more similar than we initially thought they might be, based on the controversy over the Medicare stars. 
+
+Future analyses could include: assessing the Medicare hospital ratings in the context of the socioeconomic demographics of the patients they serve, seeing how these ratings change over time, and more rigorous statistical analyses.  
+
+***
+
+#### Relevant Links: [New York City](https://www1.nyc.gov) | [NYC Open Data](https://opendata.cityofnewyork.us) | [Mailman](https://www.mailman.columbia.edu/) | [Yi's Email](mailto:yx2510@cumc.columbia.edu) | [Candace's Email](mailto:cbh2134@cumc.columbia.edu) | [Nick's Email](mailto:np2582@cumc.columbia.edu) | [Carolina's Email](mailto:cgd2137@cumc.columbia.edu)
+
+***
+
+<br>
+<br>

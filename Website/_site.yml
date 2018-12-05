@@ -1,0 +1,27 @@
+name: "Yi Xiao"
+output_dir: "."
+navbar:
+  title: "Home"
+  right:
+    - text: "About"
+      href: about.html
+    - text: "Resume"
+      href: "files/resume.pdf"
+    - text: "Project"
+      menu:
+      - text: "noaa dashboard"
+        href: plotly.html
+      - text: "noaa code"
+        href: plotly.Rmd
+    - text: "Publication"
+      href: publication.html 
+    - icon: fa-github fa-lg
+      href: https://github.com/yuezhaocolumbia/p8105_final_vital_statistics
+      
+# Includes an icon in the footer for each username you enter
+
+output:
+  html_document:
+    theme: cosmo
+    include:
+      after_body: footer.html
