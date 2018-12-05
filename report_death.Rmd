@@ -2,7 +2,7 @@
 title: "report_death"
 author: "Yue Zhao"
 date: "2018年12月4日"
-output: github_document
+output: html_document
 ---
 
 
