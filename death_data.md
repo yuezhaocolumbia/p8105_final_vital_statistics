@@ -1,28 +1,124 @@
----
-title: "Final_rep"
-author: "Yi Xiao"
-date: "05/12/2018"
-output: github_document
----
+Final\_rep
+================
+Yi Xiao
+05/12/2018
 
-```{r}
+``` r
 library(haven)
 library(dplyr)
+```
+
+    ## 
+    ## Attaching package: 'dplyr'
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
+
+``` r
 library(tidyverse)
+```
+
+    ## ── Attaching packages ─────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──
+
+    ## ✔ ggplot2 3.0.0     ✔ readr   1.1.1
+    ## ✔ tibble  1.4.2     ✔ purrr   0.2.5
+    ## ✔ tidyr   0.8.1     ✔ stringr 1.3.1
+    ## ✔ ggplot2 3.0.0     ✔ forcats 0.3.0
+
+    ## ── Conflicts ────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+    ## ✖ dplyr::filter() masks stats::filter()
+    ## ✖ dplyr::lag()    masks stats::lag()
+
+``` r
 library(stringi)
 library(ggplot2)
 library(ggmap)
 library(rgeos)
+```
+
+    ## rgeos version: 0.4-2, (SVN revision 581)
+    ##  GEOS runtime version: 3.6.1-CAPI-1.10.1 
+    ##  Linking to sp version: 1.3-1 
+    ##  Polygon checking: TRUE
+
+``` r
 library(maptools)
+```
+
+    ## Loading required package: sp
+
+    ## Checking rgeos availability: TRUE
+
+``` r
 library(geojsonio)
+```
+
+    ## 
+    ## Attaching package: 'geojsonio'
+
+    ## The following object is masked from 'package:base':
+    ## 
+    ##     pretty
+
+``` r
 library(viridis)
+```
+
+    ## Loading required package: viridisLite
+
+``` r
 library(plotly)
+```
+
+    ## 
+    ## Attaching package: 'plotly'
+
+    ## The following object is masked from 'package:ggmap':
+    ## 
+    ##     wind
+
+    ## The following object is masked from 'package:ggplot2':
+    ## 
+    ##     last_plot
+
+    ## The following object is masked from 'package:stats':
+    ## 
+    ##     filter
+
+    ## The following object is masked from 'package:graphics':
+    ## 
+    ##     layout
+
+``` r
 library(ggpubr)
 ```
 
-# 1. load the data
+    ## Loading required package: magrittr
 
-```{r}
+    ## 
+    ## Attaching package: 'magrittr'
+
+    ## The following object is masked from 'package:ggmap':
+    ## 
+    ##     inset
+
+    ## The following object is masked from 'package:purrr':
+    ## 
+    ##     set_names
+
+    ## The following object is masked from 'package:tidyr':
+    ## 
+    ##     extract
+
+1. load the data
+================
+
+``` r
 #import death data from 2004 to 2014
 name = list.files(path = "./data", full.names = TRUE, pattern = "*.sas7bdat") 
 cd_data =  map_df(name, read_sas)  %>%
@@ -45,6 +141,21 @@ cd_data = merge(cd_data, community_district , by = "community_district")
 cd_number2 = c(201:212, 301: 318, 101:112, 401:414, 501:503)
 pop_data2 = read_csv("./data/New_York_City_Population_By_Community_Districts 16.09.03.csv") %>%
  janitor::clean_names() 
+```
+
+    ## Parsed with column specification:
+    ## cols(
+    ##   Borough = col_character(),
+    ##   `CD Number` = col_integer(),
+    ##   `CD Name` = col_character(),
+    ##   `1970 Population` = col_integer(),
+    ##   `1980 Population` = col_integer(),
+    ##   `1990 Population` = col_integer(),
+    ##   `2000 Population` = col_integer(),
+    ##   `2010 Population` = col_integer()
+    ## )
+
+``` r
 pop_data2 = cbind(cd_number2, pop_data2) %>%
   select(borough, cd_number2, cd_name, x2000_population, x2010_population) %>%
   rename("cd_number" = "cd_number2")
@@ -65,14 +176,16 @@ my_tidy_data = my_data %>% # we'll use 2000 year population data for 2000 - 2009
   select(c(cd_number:cd_name, year:population))
 ```
 
-The generated dataset consists of `r nrow(my_tidy_data)` observations  and `r ncol(my_tidy_data)` columns. Each observation records information on population and death statistics in one of `r n_distinct(my_tidy_data$cd_name)` community districts in New York City. Variables in the original dataset include sex, age, ethnicity and cause of death and their cross variable with each other. Since we are interested in cause of death in this project, we only kept cause of death and its cross information with other demographic variables. 
+The generated dataset consists of 885 observations and 1315 columns. Each observation records information on population and death statistics in one of 59 community districts in New York City. Variables in the original dataset include sex, age, ethnicity and cause of death and their cross variable with each other. Since we are interested in cause of death in this project, we only kept cause of death and its cross information with other demographic variables.
 
-Cause of death is denoted with c1 to c22, which represent Deaths due to septicemia, Deaths due to HIV, Deaths due to malignant neoplasms (cancer), Deaths due to cancer of the colon, rectum, and anus, Deaths due to cancer of the pancreas, Deaths due to trachea, bronchus, and lung, Deaths due to cancer of the breast (female), Deaths due to cancer of the prostate, Deaths due to diabetes mellitus, Deaths due to use of or poisoning by psychoactive substance excluding alcohol and tobacco, Deaths due to Alzheimer's disease, Deaths due to diseases of the heart, Deaths due to essential hypertension and hypertensive renal disease, Deaths due to cerebrovascular diseases, Deaths due to influenza and pneumonia, Deaths due to chronic lower respiratory diseases, Deaths due to chronic liver disease and cirrhosis, Deaths due to Nephritis, Nephrotic Syndrome and Nephrosis, Deaths due to accident except drug poisoning, Deaths due to intentional self‐harm (suicide), Deaths due to assault (homicide), respectively. 
+Cause of death is denoted with c1 to c22, which represent Deaths due to septicemia, Deaths due to HIV, Deaths due to malignant neoplasms (cancer), Deaths due to cancer of the colon, rectum, and anus, Deaths due to cancer of the pancreas, Deaths due to trachea, bronchus, and lung, Deaths due to cancer of the breast (female), Deaths due to cancer of the prostate, Deaths due to diabetes mellitus, Deaths due to use of or poisoning by psychoactive substance excluding alcohol and tobacco, Deaths due to Alzheimer's disease, Deaths due to diseases of the heart, Deaths due to essential hypertension and hypertensive renal disease, Deaths due to cerebrovascular diseases, Deaths due to influenza and pneumonia, Deaths due to chronic lower respiratory diseases, Deaths due to chronic liver disease and cirrhosis, Deaths due to Nephritis, Nephrotic Syndrome and Nephrosis, Deaths due to accident except drug poisoning, Deaths due to intentional self‐harm (suicide), Deaths due to assault (homicide), respectively.
 
+2. tidy the data
+================
 
-# 2. tidy the data
 ### 2.1 dealting with missing value
-```{r}
+
+``` r
 missing_value = 
   my_tidy_data %>% 
   summarise_all(funs(sum(is.na(.)))) %>% 
@@ -84,8 +197,10 @@ missing_value =
 We filtered those variables with more than 20% of missing value and found `nrow(missing_value)` fell into this category. However, it is quite reasonable that no people from a certain age or gender group died of a certain disease in a specific year and neighbourhood and thus resulted in absence of recording. Missing data could suggest 0 death and removing them will lead to loss of valuable information. Therefore, we kept those missing value in our dataset.
 
 ### 2.2 split the dataset into several subsets
+
 #### dataset without demographic characteristcs
-```{r}
+
+``` r
 # we are first dealing with death infomation without accounting for other demographic characteristics
 total_death_data = my_tidy_data %>%
   select(cd_number:year, x1: x22, population, total) %>%
@@ -93,7 +208,8 @@ total_death_data = my_tidy_data %>%
 ```
 
 #### dataset crossed with other gender
-```{r}
+
+``` r
 # cause of death crossed with gender
 gender_death_data = my_tidy_data %>%
    select(cd_number : year, c1male :c22female) %>%
@@ -116,7 +232,8 @@ gender_death_data2 = gender_death_data %>%
 ```
 
 #### dataset crossed with age
-```{r}
+
+``` r
 # cause of death crossed with age 
 # gather the age and death info 
 age_death_data = my_tidy_data %>% 
@@ -150,7 +267,8 @@ age_death_data3 = age_death_data2 %>%
 ```
 
 #### dataset crossed with race
-```{r}
+
+``` r
 # cause of death crossed with race 
 race_death_data = my_tidy_data %>%
    select(cd_number:year, c11:c225) %>%
@@ -169,8 +287,9 @@ race_death_data2 = race_death_data %>%
   summarise(borough_race_death = sum(number, na.rm = TRUE))
 ```
 
-#### 2.3 write a function to replace cause of death code to detailed description 
-```{r}
+#### 2.3 write a function to replace cause of death code to detailed description
+
+``` r
 replace_cd = function(df){ 
  
   df$cause_of_death[df$cause_of_death == "x1" | df$cause_of_death == "c1"] = "septicemia" 
@@ -206,9 +325,12 @@ age_death_data2 = replace_cd(age_death_data2)
 age_death_data3 = replace_cd(age_death_data3)
 ```
 
-# 3. data analysis
-#### 3.1 crude mortality rate 
-```{r}
+3. data analysis
+================
+
+#### 3.1 crude mortality rate
+
+``` r
 # 14-year average crude mortality rate in each community district in New York City
 cd_death_rate  = total_death_data %>%
   group_by(borough, cd_name, year) %>%
@@ -228,10 +350,10 @@ cd_death_rate %>%
         theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
   viridis::scale_fill_viridis(discrete = TRUE) 
 ```
-We can see that the mortality rate are higher on average in Bronx and Brooklyn. The boroughs with highest mortality are Coney Island in Brooklyn and Riverdale in Bronx. The areas with more wealthy people like Manhattan and Queens have a relative low mortality rate overall.
 
+![](death_data_files/figure-markdown_github/unnamed-chunk-9-1.png) We can see that the mortality rate are higher on average in Bronx and Brooklyn. The boroughs with highest mortality are Coney Island in Brooklyn and Riverdale in Bronx. The areas with more wealthy people like Manhattan and Queens have a relative low mortality rate overall.
 
-```{r}
+``` r
 URL <- "http://services5.arcgis.com/GfwWNkhOj9bNBqoJ/arcgis/rest/services/nycd/FeatureServer/0/query?where=1=1&outFields=*&outSR=4326&f=geojson"
 fil <- "nyc_community_districts.geojson"
 if (!file.exists(fil)) download.file(URL, fil)
@@ -251,7 +373,11 @@ ny_map = ggplot() %>% +  # draw NYC map
         geom_text(data=mids, aes(x=x, y=y, label=id), size=2) +
         coord_map() + 
         ggthemes::theme_map()
+```
 
+    ## Warning: Ignoring unknown aesthetics: x, y
+
+``` r
 par(mfrow = c(2,1))
  nyc_districts@data =  merge(nyc_districts@data, cd_death_rate, by.x = "BoroCD", by.y = "cd_number")
 
@@ -272,13 +398,19 @@ ggthemes::theme_map() +
 theme(legend.position=c(0.1,0.5)) +
    labs(title = "average crude mortality rate in each community district in New York City from 2000 to 2014"
             )
+```
 
+    ## Warning: Ignoring unknown aesthetics: x, y
+
+``` r
 cd_death_map
 ```
 
+![](death_data_files/figure-markdown_github/unnamed-chunk-10-1.png)
+
 Geographically speaking, the map shows a very interesting pattern that the far north and the far south part of New York are having the highest mortality rates. The middle part of New York is having a lower mortality rate. But this can also be confounded by the income level of the people living in those areas. Because the people live in the middle part usually have a higher income, they can afford the housing in the central area which are more expensive than the surrounding area.
 
-```{r}
+``` r
 # cause-specific mortality rate in each borough
 specific_death_rate = total_death_data %>%
   group_by(borough, year, cause_of_death) %>%
@@ -303,10 +435,11 @@ specific_death_rate %>%
   viridis::scale_fill_viridis(discrete = TRUE)
 ```
 
+![](death_data_files/figure-markdown_github/unnamed-chunk-11-1.png)
+
 We can now see that the disease of the heart is the leading cause of deaths in all areas. Cancer is the second most common cause of deaths in all areas. Overall, in terms of Cause of Deaths distribution across areas, we do not see a big difference in the structure of the cause of deaths.
 
-
-```{r}
+``` r
 # annual mortality rate in New York City from 2000 to 2010
 year_death_rate = total_death_data %>%
   group_by(borough, year) %>%
@@ -323,9 +456,10 @@ year_death_rate %>%
          title = "Crude motality rate in New York City across time") + 
   viridis::scale_color_viridis(discrete = TRUE)
 ```
-From a longitudinal perspective, the mortality rate goes down as the years go by. The mortality rate for Brooklyn, Manhattan and Bronx are clustered together in terms of years. Staten Island has a higher mortality rate overall and Queens has the lowest mortality rate. There is a drop in mortality rates between 2006 and 2007. In 2010, there is a second drop in mortality rates.
 
-```{r}
+![](death_data_files/figure-markdown_github/unnamed-chunk-12-1.png) From a longitudinal perspective, the mortality rate goes down as the years go by. The mortality rate for Brooklyn, Manhattan and Bronx are clustered together in terms of years. Staten Island has a higher mortality rate overall and Queens has the lowest mortality rate. There is a drop in mortality rates between 2006 and 2007. In 2010, there is a second drop in mortality rates.
+
+``` r
 year_cs_death_ny = total_death_data %>%
   group_by(year, cause_of_death) %>%
   summarise(specific_death_number = sum(number, na.rm = TRUE), total_population = sum(population)) %>%
@@ -399,12 +533,29 @@ filter(year == 2014) %>%
   viridis::scale_fill_viridis(discrete = TRUE) 
 
 yr00
+```
+
+![](death_data_files/figure-markdown_github/unnamed-chunk-13-1.png)
+
+``` r
 yr06
+```
+
+![](death_data_files/figure-markdown_github/unnamed-chunk-13-2.png)
+
+``` r
 yr12
+```
+
+![](death_data_files/figure-markdown_github/unnamed-chunk-13-3.png)
+
+``` r
 yr14
 ```
 
-```{r}
+![](death_data_files/figure-markdown_github/unnamed-chunk-13-4.png)
+
+``` r
 # death by gender in each borough by year
 gender_death_cause = gender_death_data2 %>%
   group_by(gender, cause_of_death) %>%
@@ -447,8 +598,13 @@ theme_bw()+
 ggarrange(male1, female1, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
 ```
 
+    ## Warning: Removed 1 rows containing missing values (geom_bar).
 
-```{r}
+    ## Warning: Removed 1 rows containing missing values (geom_bar).
+
+![](death_data_files/figure-markdown_github/unnamed-chunk-14-1.png)
+
+``` r
 gender_death_data2 %>%
    group_by(year, gender) %>%
   summarise(total_death = sum(number_cs_boro_gdr)) %>%
@@ -462,10 +618,10 @@ gender_death_data2 %>%
   viridis::scale_color_viridis(discrete = TRUE) +
    theme(axis.text.x = element_text(angle=90, vjust=0.6))
 ```
-The number of deaths for female is overall greater than the number of deaths for male. The curves for the two groups are parallel to each other over time. We assume there is some difference between men and women in terms of the number of deaths.  But the difference was not due to the change of time.
 
+![](death_data_files/figure-markdown_github/unnamed-chunk-15-1.png) The number of deaths for female is overall greater than the number of deaths for male. The curves for the two groups are parallel to each other over time. We assume there is some difference between men and women in terms of the number of deaths. But the difference was not due to the change of time.
 
-```{r}
+``` r
 race_death_data2 = race_death_data2 %>%
   ungroup() %>%
   mutate(race = case_when(
@@ -485,7 +641,7 @@ race_death_cause  = race_death_data2%>%
   arrange(race, desc(cs_death_race)) 
 ```
 
-```{r}
+``` r
 race_death_cd = merge(race_death_data2, race_death_cause) %>%
   group_by(race, cause_of_death, borough) %>%
   summarise(race_ds_br = sum(borough_race_death)/10) 
@@ -503,7 +659,9 @@ theme_bw() +
   viridis::scale_fill_viridis(discrete = TRUE) 
 ```
 
-```{r}
+![](death_data_files/figure-markdown_github/unnamed-chunk-17-1.png)
+
+``` r
 race_death_cd %>% 
   filter(race == "Asian Non-Hispanic") %>%
   ggplot(aes(x = reorder(cause_of_death, race_ds_br), y = race_ds_br, fill = borough)) +
@@ -517,7 +675,9 @@ race_death_cd %>%
   viridis::scale_fill_viridis(discrete = TRUE) 
 ```
 
-```{r}
+![](death_data_files/figure-markdown_github/unnamed-chunk-18-1.png)
+
+``` r
 race_death_cd %>% 
   filter(race == "White Non-Hispanic") %>%
   ggplot(aes(x = reorder(cause_of_death, race_ds_br), y = race_ds_br, fill = borough)) +
@@ -530,7 +690,10 @@ theme_bw()+
    theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
   viridis::scale_fill_viridis(discrete = TRUE) 
 ```
-```{r}
+
+![](death_data_files/figure-markdown_github/unnamed-chunk-19-1.png)
+
+``` r
 race_death_cd %>% 
   filter(race == "Black Non-hispanic") %>%
   ggplot(aes(x = reorder(cause_of_death, race_ds_br), y = race_ds_br, fill = borough)) +
@@ -543,7 +706,10 @@ theme_bw() +
    theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
   viridis::scale_fill_viridis(discrete = TRUE) 
 ```
-```{r}
+
+![](death_data_files/figure-markdown_github/unnamed-chunk-20-1.png)
+
+``` r
 race_death_data2 %>%
   group_by(race, year) %>%
   summarise(total_death_yr_rc = sum(borough_race_death)) %>%
@@ -558,7 +724,12 @@ race_death_data2 %>%
   viridis::scale_fill_viridis(discrete = TRUE)  
 ```
 
-```{r}
+    ## Scale for 'fill' is already present. Adding another scale for 'fill',
+    ## which will replace the existing scale.
+
+![](death_data_files/figure-markdown_github/unnamed-chunk-21-1.png)
+
+``` r
 # leading cause of death in each age group
 age_death_cause = age_death_data3 %>%
   group_by(age_group, cause_of_death) %>%
@@ -571,7 +742,7 @@ age_death_cause = age_death_cause %>%
   filter(age_group == "Premature Death" | age_group == ">65 age death")
 ```
 
-```{r}
+``` r
 age_death_data3 = merge(age_death_data3, age_death_cause) %>%
   group_by(cause_of_death, age_group, borough) %>%
   summarise(br_death_age = sum(av_death_age)/11) 
@@ -603,5 +774,4 @@ theme_bw()+
 ggarrange(over_65_2, premature2, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
 ```
 
-
-
+![](death_data_files/figure-markdown_github/unnamed-chunk-23-1.png)
