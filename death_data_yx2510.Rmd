@@ -816,6 +816,23 @@ theme(
 
 #### change of death number by age group 
 ```{r}
-
+age_death_data3 %>%
+  group_by(age_group, year)  %>%
+  summarise(total_death = sum(borough_age_death)) %>%
+  ggplot(aes(x = year, y = total_death, color = age_group)) +
+  geom_line() +
+   labs(title = "Number of death in different age group in New York City",
+             x = "Year",
+             y = "Number of death")  + 
+theme(
+  panel.background = element_rect(fill = "white",
+                                colour = "white",
+                                size = 0.5, linetype = "solid"),
+  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey"), 
+  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey")
+  ) +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6))
 ```
 
