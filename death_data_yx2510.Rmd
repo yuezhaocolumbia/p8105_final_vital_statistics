@@ -27,17 +27,16 @@ cd_data =  map_df(name, read_sas)  %>%
   janitor::clean_names()
 year = as.data.frame(rep(2004:2014, each = 59)) 
 
+# add a column "year"
+cd_data = cbind(year, cd_data) 
+colnames(cd_data)[1] = "year"
+
 community_district = unique(cd_data$community_district)
 cd_number = c(101:112, 201:212, 301: 318, 401:414, 501:503)
 community_district = as.tibble(cbind(community_district, cd_number))
 
-cd_data = merge(cd_data, community_district , by = "community_district") %>%
-  select(cd_number, everything())
+cd_data = merge(cd_data, community_district , by = "community_district")
 
-
-# add a column "year"
-cd_data = cbind(year, cd_data) 
-colnames(cd_data)[1] = "year"
 
 
 # import population data
@@ -61,10 +60,7 @@ my_tidy_data = my_data %>% # we'll use 2000 year population data for 2000 - 2009
   select(-c(x2000_population, x2010_population)) %>% 
   mutate(cd_name = as.factor(cd_name)
          ) %>%
-  select(c(cd_number:year, x1:population))
-
-
-
+  select(c(cd_number:cd_name, year:population))
 ```
 
 The generated dataset consists of `r nrow(my_tidy_data)` observations  and `r ncol(my_tidy_data)` columns. Each observation records information on population and death statistics in one of `r n_distinct(my_tidy_data$cd_name)` community districts in New York City. Variables in the original dataset include sex, age, ethnicity and cause of death and their cross variable with each other. Since we are interested in cause of death in this project, we only kept cause of death and its cross information with other demographic variables. Noteworthily, the presence of a large proportion of NAs could be an issue in later steps.
@@ -123,7 +119,7 @@ total_death_data = my_tidy_data %>%
   select(cd_number:year, x1: x22, population, total) %>%
   gather(key = "cause_of_death", value = number, x1:x22) 
 
-   
+
 ```
 
 ## 2.2 cause of death crossed with gender
@@ -207,32 +203,33 @@ Now I added specific cause of death to the dataset.
 ```{r}
 replace_cd = function(df){ 
  
-  df$cause_of_death[df$cause_of_death == "x1"] = "septicemia" 
-  df$cause_of_death[df$cause_of_death == "x2"] = "HIV"
-  df$cause_of_death[df$cause_of_death == "x3"] = "malignant neoplasms (cancer)"
-  df$cause_of_death[df$cause_of_death == "x4"] = "cancer of the colon, rectum, and anus"
-  df$cause_of_death[df$cause_of_death == "x5"] = "cancer of the pancreas"
-  df$cause_of_death[df$cause_of_death == "x6"] = "trachea, bronchus, and lung"
-  df$cause_of_death[df$cause_of_death == "x7"] = "cancer of the breast (female)"
-  df$cause_of_death[df$cause_of_death == "x8"] = "cancer of the prostate"
-  df$cause_of_death[df$cause_of_death == "x9"] = " diabetes mellitus"
-  df$cause_of_death[df$cause_of_death == "x10"] = "psychoactive substance"
-  df$cause_of_death[df$cause_of_death == "x11"] = "Alzheimer's disease"
-  df$cause_of_death[df$cause_of_death == "x12"] = " diseases of the heart"
-  df$cause_of_death[df$cause_of_death == "x13"] = "hypertension/hypertensive renal disease"
-  df$cause_of_death[df$cause_of_death == "x14"] = "cerebrovascular diseases"
-  df$cause_of_death[df$cause_of_death == "x15"] = "influenza and pneumonia"
-  df$cause_of_death[df$cause_of_death == "x16"] = "chronic lower respiratory diseases"
-  df$cause_of_death[df$cause_of_death == "x17"] = "chronic liver disease and cirrhosis"
-  df$cause_of_death[df$cause_of_death == "x18"] = "Nephritis, Nephrotic Syndrome and Nephrosis"
-  df$cause_of_death[df$cause_of_death == "x19"] = "accident except drug poisoning"
-  df$cause_of_death[df$cause_of_death == "x20"] = "intentional self‐harm (suicide)"
-  df$cause_of_death[df$cause_of_death == "x21"] = "assault (homicide)"
-  df$cause_of_death[df$cause_of_death == "x22"] = "others"
+  df$cause_of_death[df$cause_of_death == "x1" | df$cause_of_death == "c1"] = "septicemia" 
+  df$cause_of_death[df$cause_of_death == "x2" | df$cause_of_death == "c2"] = "HIV"
+  df$cause_of_death[df$cause_of_death == "x3" | df$cause_of_death == "c3"] = "malignant neoplasms (cancer)"
+  df$cause_of_death[df$cause_of_death == "x4" | df$cause_of_death == "c4"] = "cancer of the colon, rectum, and anus"
+  df$cause_of_death[df$cause_of_death == "x5" | df$cause_of_death == "c5"] = "cancer of the pancreas"
+  df$cause_of_death[df$cause_of_death == "x6" | df$cause_of_death == "c6"] = "trachea, bronchus, and lung"
+  df$cause_of_death[df$cause_of_death == "x7" | df$cause_of_death == "c7"] = "cancer of the breast (female)"
+  df$cause_of_death[df$cause_of_death == "x8" | df$cause_of_death == "c8"] = "cancer of the prostate"
+  df$cause_of_death[df$cause_of_death == "x9" | df$cause_of_death == "c9"] = " diabetes mellitus"
+  df$cause_of_death[df$cause_of_death == "x10" | df$cause_of_death == "c10"] = "psychoactive substance"
+  df$cause_of_death[df$cause_of_death == "x11"  | df$cause_of_death == "c11"] = "Alzheimer's disease"
+  df$cause_of_death[df$cause_of_death == "x12" | df$cause_of_death == "c12"] = " diseases of the heart"
+  df$cause_of_death[df$cause_of_death == "x13" | df$cause_of_death == "c13"] = "hypertension/hypertensive renal disease"
+  df$cause_of_death[df$cause_of_death == "x14" | df$cause_of_death == "c14"] = "cerebrovascular diseases"
+  df$cause_of_death[df$cause_of_death == "x15" | df$cause_of_death == "c15"] = "influenza and pneumonia"
+  df$cause_of_death[df$cause_of_death == "x16" | df$cause_of_death == "c16"] = "chronic lower respiratory diseases"
+  df$cause_of_death[df$cause_of_death == "x17" | df$cause_of_death == "c17"] = "chronic liver disease and cirrhosis"
+  df$cause_of_death[df$cause_of_death == "x18" | df$cause_of_death == "c18"] = "Nephritis, Nephrotic Syndrome and Nephrosis"
+  df$cause_of_death[df$cause_of_death == "x19" | df$cause_of_death == "c19"] = "accident except drug poisoning"
+  df$cause_of_death[df$cause_of_death == "x20" | df$cause_of_death == "c20"] = "intentional self‐harm (suicide)"
+  df$cause_of_death[df$cause_of_death == "x21" | df$cause_of_death == "c21"] = "assault (homicide)"
+  df$cause_of_death[df$cause_of_death == "x22" | df$cause_of_death == "c22"] = "others"
   df
 }
 
 total_death_data = replace_cd(total_death_data)
+gender_death_data =replace_cd(gender_death_data)
 
 ```
 
@@ -243,7 +240,7 @@ total_death_data = replace_cd(total_death_data)
 
 ```{r crude mortality rate}
 # 10-year average crude mortality rate in each community district in New York City
-cd_death_rate = total_death_data %>%
+cd_death_rate  = total_death_data %>%
   group_by(borough, cd_name, year) %>%
   summarise(total_cd_death = sum(number, na.rm = TRUE), population = mean(population), cd_number = mean(as.numeric(cd_number))) %>%
   mutate(motality_rate = total_cd_death/population) %>%
@@ -278,6 +275,7 @@ borough_death_rate %>%
              x = "Borough",
              y = "Average Motality Rate") +
         theme(axis.text.x = element_text(angle=90, vjust=0.6))
+
   
 ```
 
