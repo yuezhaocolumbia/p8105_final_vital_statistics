@@ -35,7 +35,15 @@ For the birth data, we would like to know the birth rate in New York by race, pl
 
 #### Related work
 
-Anything that inspired you, such as a paper, a web site, or something we discussed in class. \#\#\#\# Load and clean the data from community\_district source
+Anything that inspired you, such as a paper, a web site, or something we discussed in class.
+
+There is a website:<https://www1.nyc.gov/site/doh/about/about-doh.page> which contains a lot of stuffs about health issues in the city of New York. This is from New York City Department of Health and Mental Hygiene, which is one of the largest public health agencies in the world. Their work is really broad-ranging to protect and promote the health of 8 million diverse New Yorkers every day.
+
+From these website, we successful got the data we want about the death and birth in the city of New York for free. At the same time, we read the relative summary from this website to got a guide for our project.
+
+Moreover, from the computing club, we were introducted to create maps in ggplot, which is really cool. Combining with what we have learned about visualization and exploratory analysis in class, we are inspired to create some well-looled plot about the birth and death related stuff in the city of New York.
+
+#### Load and clean the data from community\_district source
 
 ``` r
 birth_data = 
