@@ -7,14 +7,6 @@ This will detail how you completed your project, and should cover data collectio
 
 • Motivation: Provide an overview of the project goals and motivation. • Related work: Anything that inspired you, such as a paper, a web site, or something we discussed in class. • Initial questions: What questions are you trying to answer? How did these questions evolve over the course of the project? What new questions did you consider in the course of your analysis? • Data: Source, scraping method, cleaning, etc. • Exploratory analysis: Visualizations, summaries, and exploratory statistical analyses. Justify the steps you took, and show any major changes to your ideas. • Additional analysis: If you undertake formal statistical analyses, describe these in detail • Discussion: What were your findings? Are they what you expect? What insights into the data can you make?
 
-<br>
-
-#### The anticipated data sources
-
-Data is from the nyc department of health.
-
-Datasets that will be used in this project are, but not limited to, the birth micro SAS Datasets \[Year(s)\] and death micro SAS Datasets \[Year(s)\] from National Vital Statistics System (time period is from 2000 to 2014). American Community Survey can be refered to for poverty data.
-
 Understanding the pattern of birth and death is of critical importance in identifying public health issue. In this study, we are interested in the cause of deaths and birth rate in New York City.
 
 We analysis the birth and death part respectively, and this is for the birth part.
@@ -67,22 +59,29 @@ Moreover, the real data always contain a lot of missing value, so we have anothe
 
 -   How to deal with the missing value rationally?
 
-#### Load and clean the data from community\_district source
+#### Data
+
+Source, scraping method, cleaning, etc.
+
+Our data is from the NYC Department of Health and Mental Hygiene.
+
+Datasets that will be used in this project are, but not limited to, the birth micro SAS Datasets \[Year(s)\] from National Vital Statistics System (time period is from 2000 to 2014). American Community Survey can be refered to for poverty data.
+
+Comparing with the three different aggregated dataset: Community District micro-datasets (single year aggregate counts), Zip Code micro-datasets (aggregated 3 year counts) and Census Tract datasets (aggregated 5 year counts), we choose to use Community District micro-datasets (single year aggregate counts), since this dataset only aggregate for single years, and we can better analysis the trend of birth characteristics by years.
+
+##### Load and clean the data from community\_district source
 
 ``` r
+# load and import community_district dataset
 birth_data = 
   tibble(file_name = list.files(path = "./birth_data/community_district")) %>% 
-  
-  # iterate over file names and read in data for each subject
   mutate(output = purrr::map(str_c("./birth_data/community_district/", file_name), haven::read_sas)) %>%
-  
-  # unnest the dataframe
   unnest() %>% 
   separate(file_name, c("name", "year", "del"), sep = c(6, 8)) %>% 
   select(-name, -del) %>%
   mutate(year = as.factor(year))
 
-# import cd code data
+# import cd code dataset
 cd_code_data = 
   read_csv("./data/New_York_City_Population_By_Community_Districts 16.09.03.csv") %>%
   janitor::clean_names() %>%
@@ -108,35 +107,69 @@ cd_code_data =
     ## )
 
 ``` r
-# join two data
+# join two dataset
 birth_data_un = 
   birth_data %>% 
   unnest() %>% 
   left_join(cd_code_data, by = "cd") 
 ```
 
-#### Deal with missing value
+##### Deal with missing value
+
+After loading and cleaning the dataset, we find out that there are a lot of missing values in the dataset. We first checking the number and proportion of the missing values in each column
 
 ``` r
-# check for the number of missing value
+# check for the number and proprotion of missing value
 missing_value = 
   birth_data_un %>% 
   summarise_all(funs(sum(is.na(.)))) %>% 
   gather(term, num_na, everything()) %>% 
-  mutate(percent = num_na/885) %>% 
-  filter(percent > 0.2)
+  mutate(percent = num_na/885) 
 ```
 
-For the missing value, we count for the number of missing value for each column of the variables and then count for the proportion of them. Using the cutoff = 20%. If the proprtion of missing value is larger than 20%, we delete this column of variable(usually this means to delete a category of one specific variable). And if the proportion is less than 20%, we keep this catagory of the specific variable and valua the NA as the same value as it was in the last yeat of the same borough.
+Each column in this dataset means a category in a specific birth related variables. If the proprotion of missing values in a column is relatively high, it will make confusion in our analysis. If almost very colums in a specific birth related variable are highly missing , we decide to delete this varibales from the dataset, since it's hard to explore something useful.
 
-#### Tidy the data for each variables separately
+Accoring to the missing value proportion and our interests, using the cutoff = 20%, we finally select
+
+-   Individual variables: maternal age, maternal nativity, parity, maternal marital status, infant sex and infant birthweight;
+
+-   Crossed variables: infant birthweight and maternal age, infant sex and maternal nativity, maternal nativity and maternal age, gestational and maternal age, infant sex and maternal age
+
+for our futher analysis.
+
+#### Exploratory analysis
+
+Visualizations, summaries, and exploratory statistical analyses. Justify the steps you took, and show any major changes to your ideas.
+
+##### Tidy the data for each variables separately
 
 **Individual Variables**
 
-age, nativity, parity, maternal marital status, infant sex, infant birthweight
+maternal age, maternal nativity, parity, maternal marital status, infant sex, infant birthweight
 
 ``` r
 # checking missing data for the data maternal age
+birth_data_un %>%
+  select(starts_with("age")) %>% 
+  summarise_all(funs(sum(is.na(.)))) %>% 
+  gather(term, num_na, everything()) %>% 
+  mutate(percent = num_na/885) 
+```
+
+    ## # A tibble: 9 x 3
+    ##   term    num_na percent
+    ##   <chr>    <int>   <dbl>
+    ## 1 age1tot    774  0.875 
+    ## 2 age2tot     84  0.0949
+    ## 3 age3tot     46  0.0520
+    ## 4 age4tot      0  0     
+    ## 5 age5tot      0  0     
+    ## 6 age6tot      0  0     
+    ## 7 age7tot      0  0     
+    ## 8 age8tot      0  0     
+    ## 9 age9tot    379  0.428
+
+``` r
 birth_data_un %>% 
   select(year, cd, birthtot, age1tot:age9tot) %>%
   gather(maternal_age, num, age1tot:age9tot) %>% 
