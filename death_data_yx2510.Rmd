@@ -387,11 +387,12 @@ filter(year %in% c("2000", "2006", "2010", "2014")) %>%
   
 lead_cause = merge(year_cs_death_ny, total_death_data) %>% 
   group_by(year, cause_of_death) %>%
-  summarise(cs_death = sum(number, na.rm = TRUE)) 
+  summarise(specific_death_number = sum(number, na.rm = TRUE), total_population = sum(population)) %>%
+  mutate(motality_rate = specific_death_number/total_population)
 
 lead_cause %>%
   filter(year == 2000) %>%
-  ggplot(aes(reorder(x = cause_of_death, cs_death), y = cs_death)) +
+  ggplot(aes(reorder(x = cause_of_death, motality_rate), y = motality_rate)) +
   geom_bar(stat = "identity", fill = "lightblue") + 
   theme_bw() +
    theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
@@ -402,8 +403,8 @@ lead_cause %>%
 
 lead_cause %>%
   filter(year == 2006) %>%
-  ggplot(aes(reorder(x = cause_of_death, cs_death), y = cs_death)) +
-  geom_bar(stat = "identity", fill = "aquamarine") + 
+  ggplot(aes(reorder(x = cause_of_death, motality_rate), y = motality_rate)) +
+  geom_bar(stat = "identity", fill = "lightblue") + 
   theme_bw() +
    theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
    labs(x = "Cause of death", 
@@ -412,29 +413,55 @@ lead_cause %>%
   coord_flip()
 
  lead_cause %>%
-   filter(year == 2010) %>%
-  ggplot(aes(reorder(x = cause_of_death, cs_death), y = cs_death)) +
-  geom_bar(stat = "identity", fill = "bisque1") + 
+  filter(year == 2010) %>%
+  ggplot(aes(reorder(x = cause_of_death, motality_rate), y = motality_rate)) +
+  geom_bar(stat = "identity", fill = "lightblue") + 
   theme_bw() +
    theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
    labs(x = "Cause of death", 
          y = "Crude mortality rate", 
-         title = "leading cause of death in 2008") +
+         title = "leading cause of death in 2000") +
   coord_flip()
 
  lead_cause %>%
-   filter(year == 2014) %>%
-  ggplot(aes(reorder(x = cause_of_death, cs_death), y = cs_death)) +
-  geom_bar(stat = "identity", fill = "deeppink1") + 
+  filter(year == 2014) %>%
+  ggplot(aes(reorder(x = cause_of_death, motality_rate), y = motality_rate)) +
+  geom_bar(stat = "identity", fill = "lightblue") + 
   theme_bw() +
    theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
    labs(x = "Cause of death", 
          y = "Crude mortality rate", 
-         title = "leading cause of death in 2008") +
+         title = "leading cause of death in 2014") +
   coord_flip()
    
   
 ```
+
+### by year and borough 
+```{r}
+# identify the top ten death by borough
+lead_death3 = merge(lead_cause, total_death_data) %>%
+  group_by(borough, year, cause_of_death) %>%
+  summarise(br_death_number = sum(number, na.rm = TRUE), br_population = sum(population)) %>%
+  mutate(br_rate = br_death_number/br_population)
+  
+  
+lead_death3 %>% 
+filter(year == 2000) %>%
+  ggplot(aes(reorder(x = cause_of_death, br_rate), y = br_rate, fill = borough)) +
+  geom_bar(stat = "identity") + 
+  theme_bw() +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
+   labs(x = "Cause of death", 
+         y = "Crude mortality rate", 
+         title = "leading cause of death in 2000") +
+  coord_flip()  +
+  viridis::scale_fill_viridis(discrete = TRUE) 
+
+
+  
+```
+
 
 
 #### 3.3 by gender
