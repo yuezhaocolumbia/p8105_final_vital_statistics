@@ -1,3 +1,10 @@
+---
+output: 
+  html_document:
+     toc: true
+     toc_float: true
+---
+
 <br>
 <br>
   
@@ -12,6 +19,7 @@
 
 
 ***
+#  **Motivation**
 In July 2016, the Centers for Medicare and Medicaid's "Hospital Compare" program (a consumer-oriented website that gives information about how well hospitals provide care to their patients) rolled out a new Overall Hospital Quality Star Rating, which rated hospitals between 1 and 5 stars based on a variety of measures. This roll out was  [controversial](https://www.usnews.com/news/articles/2016-07-27/medicare-releases-controversial-hospital-star-ratings), with many hospitals criticizing the rankings. One major complaint was that  major hospitals that consistently score highly in US News & World Reports rankings and other commercial rankings did not score highly on the [Medicare rankings](https://www.npr.org/sections/health-shots/2016/07/27/487633215/many-well-known-hospitals-fail-to-score-high-in-medicare-rankings), and instead relatively obscure hospitals received the highest rating (a rating of 5 stars). 
 
 <br>
@@ -22,7 +30,7 @@ In July 2016, the Centers for Medicare and Medicaid's "Hospital Compare" program
 
 For our final Data Science project, we decided to analyze the Medicare data to try to assess some of these claims. 
 
-##**Data Sources**
+#  **Data Sources**
 
 * The [Hospital General Information](https://data.medicare.gov/Hospital-Compare/Hospital-General-Information/xubh-q36u/data) dataset is published by the Centers for Medicare & Medicaid Services and contains information about all hospitals in the United States (and U.S. Territories) that have been registered with Medicare. According to the Medicare [website](https://data.medicare.gov/Hospital-Compare/Hospital-General-Information/xubh-q36u/about), this dataset was created in May 2014 and was last updated in October 2017. We downloaded the dataset as a csv file. More information about hospital ratings methodology can be found [here](https://www.qualitynet.org/dcs/ContentServer?c=Page&pagename=QnetPublic%2FPage%2FQnetTier3&cid=1228775957165) and [here](http://www.hcahpsonline.org/Files/October_2017_Star%20Ratings_Tech%20Notes.pdf). 
 
@@ -32,7 +40,7 @@ For our final Data Science project, we decided to analyze the Medicare data to t
 
 More information about the US News & World Reports methodology for the 2016-2017 rankings can be found [here](http://web.archive.org/web/20160910084826/http://static.usnews.com:80/documents/health/best-hospitals/BH_Methodology_2016-17.pdf).   
 
-##**Analyses**
+# **Analyses**
 
 Please see our [video](https://youtu.be/xTQKZP_36tE) for an narrated screencast of our analysis. 
 
@@ -53,7 +61,7 @@ The plots that adress these questions can be found [here](Hospital_flexdashboard
 The preliminary model we created can be found [here](Model_Page.html). 
 
 
-##**Conclusions and Future Directions**
+# **Conclusions and Future Directions**
 
 Our analysis suggests that some of the criticisms of the Medicare Hospital Star rating system may be valid. There was an unexpected geographical distribution of 5-star hospitals (for example, there were more 5 star hospitals in South Dakota than in New York). However, the comparison of the Medicare Hospital rankings and the US News & Reports rankings were more similar than we initially thought they might be, based on the controversy over the Medicare stars. 
 
@@ -61,7 +69,7 @@ Future analyses could include: assessing the Medicare hospital ratings in the co
 
 ***
 
-#### Relevant Links: [Medicare Data Source](https://data.medicare.gov/Hospital-Compare/Hospital-General-Information/xubh-q36u) | [Medicare Data](https://data.medicare.gov) | [Mailman](https://www.mailman.columbia.edu/) | [Huilan's Email](mailto:ht2448@cumc.columbia.edu) | [Candace's Email](mailto:cbh2134@cumc.columbia.edu) | [Nick's Email](mailto:np2582@cumc.columbia.edu) | [Carolina's Email](mailto:cgd2137@cumc.columbia.edu)
+#### Relevant Links: [New York City](https://www1.nyc.gov) | [NYC Open Data](https://opendata.cityofnewyork.us) | [Mailman](https://www.mailman.columbia.edu/) | [Yi's Email](mailto:yx2510@cumc.columbia.edu) | [Candace's Email](mailto:cbh2134@cumc.columbia.edu) | [Nick's Email](mailto:np2582@cumc.columbia.edu) | [Carolina's Email](mailto:cgd2137@cumc.columbia.edu)
 
 ***
 

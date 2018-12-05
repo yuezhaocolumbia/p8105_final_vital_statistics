@@ -19,6 +19,9 @@
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
@@ -169,6 +172,101 @@ $(document).ready(function () {
 
 
 
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
 
 
 <div class="navbar navbar-default  navbar-fixed-top" role="navigation">
@@ -238,6 +336,10 @@ $(document).ready(function () {
 <div id="yi-xiaoyx2510-candace-haghighi-nicholas-pantaleo-carolina-downie" class="section level3">
 <h3>Yi Xiao(yx2510) | Candace Haghighi | Nicholas Pantaleo | Carolina Downie</h3>
 <hr />
+</div>
+</div>
+<div id="motivation" class="section level1">
+<h1><strong>Motivation</strong></h1>
 <p>In July 2016, the Centers for Medicare and Medicaid’s “Hospital Compare” program (a consumer-oriented website that gives information about how well hospitals provide care to their patients) rolled out a new Overall Hospital Quality Star Rating, which rated hospitals between 1 and 5 stars based on a variety of measures. This roll out was <a href="https://www.usnews.com/news/articles/2016-07-27/medicare-releases-controversial-hospital-star-ratings">controversial</a>, with many hospitals criticizing the rankings. One major complaint was that major hospitals that consistently score highly in US News &amp; World Reports rankings and other commercial rankings did not score highly on the <a href="https://www.npr.org/sections/health-shots/2016/07/27/487633215/many-well-known-hospitals-fail-to-score-high-in-medicare-rankings">Medicare rankings</a>, and instead relatively obscure hospitals received the highest rating (a rating of 5 stars).</p>
 <p><br></p>
 <iframe width="560" height="315" src="https://www.youtube.com/embed/xTQKZP_36tE" frameborder="0" gesture="media" allow="encrypted-media" allowfullscreen>
@@ -245,17 +347,16 @@ $(document).ready(function () {
 <p><br></p>
 <p>For our final Data Science project, we decided to analyze the Medicare data to try to assess some of these claims.</p>
 </div>
-</div>
-<div id="data-sources" class="section level2">
-<h2><strong>Data Sources</strong></h2>
+<div id="data-sources" class="section level1">
+<h1><strong>Data Sources</strong></h1>
 <ul>
 <li><p>The <a href="https://data.medicare.gov/Hospital-Compare/Hospital-General-Information/xubh-q36u/data">Hospital General Information</a> dataset is published by the Centers for Medicare &amp; Medicaid Services and contains information about all hospitals in the United States (and U.S. Territories) that have been registered with Medicare. According to the Medicare <a href="https://data.medicare.gov/Hospital-Compare/Hospital-General-Information/xubh-q36u/about">website</a>, this dataset was created in May 2014 and was last updated in October 2017. We downloaded the dataset as a csv file. More information about hospital ratings methodology can be found <a href="https://www.qualitynet.org/dcs/ContentServer?c=Page&amp;pagename=QnetPublic%2FPage%2FQnetTier3&amp;cid=1228775957165">here</a> and <a href="http://www.hcahpsonline.org/Files/October_2017_Star%20Ratings_Tech%20Notes.pdf">here</a>.</p></li>
 <li><p>The Best Hospitals Honor Roll is a list of the top 20 hospitals that had the highest ratings across all 16 Best Hospital specialties, nine procedures, and condition ratings. Total points for hospitals on the Best Hospital Honor Roll list are out of a maximum of 448. We scraped the <a href="https://web.archive.org/web/20160816171510/http://health.usnews.com/health-care/best-hospitals/articles/best-hospitals-honor-roll-and-overview">2016-2017 Best Hospitals Honor Roll</a> from the web using CSS selectors.</p></li>
 </ul>
 <p>More information about the US News &amp; World Reports methodology for the 2016-2017 rankings can be found <a href="http://web.archive.org/web/20160910084826/http://static.usnews.com:80/documents/health/best-hospitals/BH_Methodology_2016-17.pdf">here</a>.</p>
 </div>
-<div id="analyses" class="section level2">
-<h2><strong>Analyses</strong></h2>
+<div id="analyses" class="section level1">
+<h1><strong>Analyses</strong></h1>
 <p>Please see our <a href="https://youtu.be/xTQKZP_36tE">video</a> for an narrated screencast of our analysis.</p>
 <p>Questions we were interested in included:</p>
 <ul>
@@ -272,13 +373,13 @@ $(document).ready(function () {
 </ul>
 <p>The preliminary model we created can be found <a href="Model_Page.html">here</a>.</p>
 </div>
-<div id="conclusions-and-future-directions" class="section level2">
-<h2><strong>Conclusions and Future Directions</strong></h2>
+<div id="conclusions-and-future-directions" class="section level1">
+<h1><strong>Conclusions and Future Directions</strong></h1>
 <p>Our analysis suggests that some of the criticisms of the Medicare Hospital Star rating system may be valid. There was an unexpected geographical distribution of 5-star hospitals (for example, there were more 5 star hospitals in South Dakota than in New York). However, the comparison of the Medicare Hospital rankings and the US News &amp; Reports rankings were more similar than we initially thought they might be, based on the controversy over the Medicare stars.</p>
 <p>Future analyses could include: assessing the Medicare hospital ratings in the context of the socioeconomic demographics of the patients they serve, seeing how these ratings change over time, and more rigorous statistical analyses.</p>
 <hr />
-<div id="relevant-links-medicare-data-source-medicare-data-mailman-huilans-email-candaces-email-nicks-email-carolinas-email" class="section level4">
-<h4>Relevant Links: <a href="https://data.medicare.gov/Hospital-Compare/Hospital-General-Information/xubh-q36u">Medicare Data Source</a> | <a href="https://data.medicare.gov">Medicare Data</a> | <a href="https://www.mailman.columbia.edu/">Mailman</a> | <a href="mailto:ht2448@cumc.columbia.edu">Huilan’s Email</a> | <a href="mailto:cbh2134@cumc.columbia.edu">Candace’s Email</a> | <a href="mailto:np2582@cumc.columbia.edu">Nick’s Email</a> | <a href="mailto:cgd2137@cumc.columbia.edu">Carolina’s Email</a></h4>
+<div id="relevant-links-new-york-city-nyc-open-data-mailman-yis-email-candaces-email-nicks-email-carolinas-email" class="section level4">
+<h4>Relevant Links: <a href="https://www1.nyc.gov">New York City</a> | <a href="https://opendata.cityofnewyork.us">NYC Open Data</a> | <a href="https://www.mailman.columbia.edu/">Mailman</a> | <a href="mailto:yx2510@cumc.columbia.edu">Yi’s Email</a> | <a href="mailto:cbh2134@cumc.columbia.edu">Candace’s Email</a> | <a href="mailto:np2582@cumc.columbia.edu">Nick’s Email</a> | <a href="mailto:cgd2137@cumc.columbia.edu">Carolina’s Email</a></h4>
 <hr />
 <p><br> <br></p>
 </div>
@@ -290,6 +391,8 @@ $(document).ready(function () {
 </footer>
 
 
+</div>
+</div>
 
 </div>
 
