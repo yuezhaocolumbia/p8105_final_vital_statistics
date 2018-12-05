@@ -5,6 +5,8 @@ date: "25/11/2018"
 output: html_document
 ---
 ```{r, message = FALSE}
+
+
 library(haven)
 library(dplyr)
 library(tidyverse)
@@ -230,11 +232,10 @@ replace_cd = function(df){
   df$cause_of_death[df$cause_of_death == "x20"] = "intentional self‐harm (suicide)"
   df$cause_of_death[df$cause_of_death == "x21"] = "assault (homicide)"
   df$cause_of_death[df$cause_of_death == "x22"] = "others"
-  df
 }
 
-total_death_data = replace_cd(total_death_data)
-race_death_data2 = replace_cd(race_death_data2)
+##total_death_data = replace_cd(total_death_data)
+##race_death_data2 = replace_cd(race_death_data2)
 ```
 
 # 3. data viasualization 
@@ -403,8 +404,5 @@ year_cs_death_ny %>%
   
 ```
 
-#### 3.3 death data analysis by age
-```{r}
 
-```
 
