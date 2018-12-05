@@ -10,6 +10,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(haven)
 library(purrr)
+
+theme_set(theme_bw() + theme(legend.position = "bottom", plot.title = element_text(hjust = 0.5)))
 ```
 
 Three different source of the data: community district, zip code and census tract
@@ -524,11 +526,12 @@ birth_sex_age_nomiss_data =
   mutate(num = ifelse(is.na(num), 0, num))
 ```
 
-###Plot
+###Visualization
 
-plot for age
 
-```{r}
+**Maternal Age**
+
+```{r, fig.align = 'center'}
 maternal_age_plot_data =
   birth_data_un %>%
   select(year, cd, cd_name, borough, birthtot, age1tot:age9tot) %>%
@@ -548,16 +551,31 @@ maternal_age_plot_data =
   group_by(year, borough, new_age) %>% 
   summarise(number = sum(num)) 
   
-#useful
 #the birth trend in different maternal age in NYC
 maternal_age_plot_data %>%
   group_by(year, new_age) %>% 
   summarise(number = sum(number)) %>% 
+  mutate(percent = number/ sum(number)) %>% 
   ggplot(aes(x = year, y = number, color = new_age)) +
   geom_point() +
   geom_line() +
   labs(title = "",
       y = "Number of  birth",
+      x = "Year",
+      color = "Maternal Age") +
+  theme_bw() +
+  scale_x_continuous(breaks=seq(2000, 2014, 1)) +
+  viridis::scale_color_viridis(discrete = TRUE)
+
+maternal_age_plot_data %>%
+  group_by(year, new_age) %>% 
+  summarise(number = sum(number)) %>% 
+  mutate(percent = number/ sum(number)) %>% 
+  ggplot(aes(x = year, y = percent, color = new_age)) +
+  geom_point() +
+  geom_line() +
+  labs(title = "",
+      y = "Proportion of number of  birth",
       x = "Year",
       color = "Maternal Age") +
   theme_bw() +
@@ -570,7 +588,6 @@ maternal_age_plot_data %>%
   group_by(year, borough) %>% 
   mutate(percent = number/sum(number)) %>% 
   ggplot(aes(x = year, y = percent, color = new_age)) +
-  geom_point() +
   geom_line() +
   facet_grid( ~ borough) +
   labs(title = "",
@@ -598,21 +615,24 @@ ma_nat_plot_data =
   group_by(year, borough, new_ma_nat) %>% 
   summarise(number = sum(num))
 
+#x
 #the birth trend in different maternal nativity in NYC
 ma_nat_plot_data %>%
   group_by(year, new_ma_nat) %>% 
-  summarise(number = sum(number)) %>% 
-  ggplot(aes(x = year, y = number, color = new_ma_nat)) +
+  summarise(number = sum(number)) %>%
+  mutate(percent = number/ sum(number)) %>% 
+  ggplot(aes(x = year, y = percent, color = new_ma_nat)) +
   geom_point() +
   geom_line() +
   labs(title = "",
-      y = "Number of  birth",
+      y = "Proportion of number of  birth",
       x = "Year",
-      fill = "Maternal Nativity") +
+      color = "Maternal Nativity") +
   theme_bw() +
   scale_x_continuous(breaks=seq(2000, 2014, 1)) +
   viridis::scale_color_viridis(discrete = TRUE)
 
+#get
 #the birth trend in different maternal nativity in NYC for each boro
 ma_nat_plot_data %>%
   group_by(year, borough) %>% 
@@ -627,7 +647,8 @@ ma_nat_plot_data %>%
       color = "Maternal Nativity") +
   theme_bw() +
   scale_x_continuous(breaks=seq(2000, 2014, 5)) +
-  viridis::scale_color_viridis(discrete = TRUE) 
+  viridis::scale_color_viridis(discrete = TRUE) +
+theme(legend.position = "bottom")
   #theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
 ```
 
@@ -694,7 +715,7 @@ marry_plot_data =
   group_by(year, borough, new_marry_status) %>% 
   summarise(number = sum(num))  
 
-#may useful
+
 #the birth trend in different marry status in NYC
 marry_plot_data %>%
   group_by(year, new_marry_status) %>% 
@@ -710,6 +731,7 @@ marry_plot_data %>%
   scale_x_continuous(breaks=seq(2000, 2014, 1)) +
   viridis::scale_color_viridis(discrete = TRUE)
 
+#check
 #the birth trend in different marry status in NYC for each boro
 marry_plot_data %>%
   group_by(year, borough) %>% 
@@ -748,16 +770,19 @@ infant_sex_plot_data =
 infant_sex_plot_data %>%
   group_by(year, new_infant_sex) %>% 
   summarise(number = sum(number)) %>% 
-  ggplot(aes(x = year, y = number, fill = new_infant_sex)) +
-  geom_bar(stat = "identity", position = position_dodge()) +
+  ggplot(aes(x = year, y = number, color = new_infant_sex)) +
+  geom_line() +
+  geom_point() +
   labs(title = "",
       y = "Number of  birth",
       x = "Year",
-      fill = "Infant Sex") +
+      color = "Infant Sex") +
   theme_bw() +
   scale_x_continuous(breaks=seq(2000, 2014, 1)) +
-  viridis::scale_fill_viridis(discrete = TRUE)
+  viridis::scale_color_viridis(discrete = TRUE)
 
+
+#check
 # # of male is always larger
 #the birth trend in different sex in NYC for each boro
 infant_sex_plot_data %>%
@@ -940,6 +965,7 @@ birth_nat_age_plot_data =
   group_by(year, borough, new_age, new_nat) %>% 
   summarise(number = sum(num))
 
+#check
 #maybe useful
 birth_nat_age_plot_data %>% 
   group_by(year, new_nat, new_age) %>% 
