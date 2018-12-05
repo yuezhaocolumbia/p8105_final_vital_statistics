@@ -715,3 +715,59 @@ theme(
 
 ```
 
+#### 3.6 by age group 
+```{r}
+# leading cause of death in each age group
+age_death_cause = age_death_data3 %>%
+  group_by(age_group, cause_of_death) %>%
+  summarise(av_death_age = sum(borough_age_death)/11 ) %>%
+  top_n(n = 10, wt = av_death_age) %>%
+  arrange(age_group, desc(av_death_age)) 
+
+# not much useful info in the newborn and under 1 group 
+age_death_cause = age_death_cause %>%
+  filter(age_group == "Premature Death" | age_group == ">65 age death")
+
+over_65 = age_death_cause %>%
+  filter(age_group == ">65 age death") %>%
+  ggplot(aes(x = reorder(cause_of_death, av_death_age), y = av_death_age)) +
+  geom_bar(stat = "identity", fill = "antiquewhite1") + 
+  labs(x = "Cause of death", 
+         y = "Number of death", 
+         title = "leading cause of death for over 65 year old group ") + 
+theme(
+  panel.background = element_rect(fill = "white",
+                                colour = "white",
+                                size = 0.5, linetype = "solid"),
+  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey"), 
+  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey")
+  ) +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6))
+
+
+premature = age_death_cause %>%
+  filter(age_group == "Premature Death") %>%
+  ggplot(aes(x = reorder(cause_of_death, av_death_age), y = av_death_age)) +
+  geom_bar(stat = "identity", fill = "antiquewhite1") + 
+  labs(x = "Cause of death", 
+         y = "Number of death", 
+         title = "leading cause of premature death ") + 
+theme(
+  panel.background = element_rect(fill = "white",
+                                colour = "white",
+                                size = 0.5, linetype = "solid"),
+  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey"), 
+  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey")
+  ) +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6))
+
+ggarrange(over_65, premature, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
+```
+We see that for 1-12 months age group, the leading cause of deaths are "others". For less than 28 days, the leading cause of deaths are also "others". For 65-69 age group the leading cause of death is malignant neoplasms (cancer). For >85 years old, diseases of the heart is the leading cause.
+
+
+###
