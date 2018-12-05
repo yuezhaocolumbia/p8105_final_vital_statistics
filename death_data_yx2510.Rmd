@@ -15,7 +15,8 @@ library(rgeos)
 library(maptools)
 library(geojsonio)
 library(viridis)
-
+library(plotly)
+library(ggpubr)
 
 ```
 
@@ -230,6 +231,7 @@ replace_cd = function(df){
 
 total_death_data = replace_cd(total_death_data)
 gender_death_data =replace_cd(gender_death_data)
+gender_death_data2 = replace_cd(gender_death_data2)
 
 ```
 
@@ -256,25 +258,6 @@ cd_death_rate %>%
              x = "Community District",
              y = "Average Motality Rate") +
         theme(axis.text.x = element_text(angle=90, vjust=0.6))
-   
-  
-
-
-# 10-year average crude mortality rate in each borough in New York City
-borough_death_rate = total_death_data %>%
-  group_by(borough, year) %>%
-  summarise(total_borough_death = sum(number, na.rm = TRUE), population = sum(population)/22) %>%
-  mutate(motality_rate = total_borough_death/population) %>%
-  group_by(borough) %>%
-  summarise(average_death_rate = mean(motality_rate))
-
-borough_death_rate %>%
-   ggplot(aes(x = borough, y = average_death_rate)) +
-   geom_bar(stat = "identity",width = .75, fill="tomato2") +
-   labs(title = "10-year average crude mortality rate in each borough in New York City",
-             x = "Borough",
-             y = "Average Motality Rate") +
-        theme(axis.text.x = element_text(angle=90, vjust=0.6))
 
   
 ```
@@ -286,7 +269,7 @@ fil <- "nyc_community_districts.geojson"
 if (!file.exists(fil)) download.file(URL, fil)
 
 nyc_districts = geojson_read(fil, what="sp")
-# nyc_districts@data =  merge(nyc_districts@data, cd_death_rate, by.x = "BoroCD", by.y = "cd_number")
+
 
 nyc_districts_map = fortify(nyc_districts, region="BoroCD") # add border line 
 
@@ -302,10 +285,10 @@ ny_map = ggplot() %>% +  # draw NYC map
         ggthemes::theme_map()
 
 
-
+par(mfrow = c(2,1))
  nyc_districts@data =  merge(nyc_districts@data, cd_death_rate, by.x = "BoroCD", by.y = "cd_number")
 
-choro = data.frame(district=nyc_districts@data$BoroCD, #add avergae death rate 
+choro = data.frame(district=nyc_districts@data$BoroCD,  
                     average_death_rate=nyc_districts@data$average_death_rate)
 
 cd_death_map = nyc_districts_map %>% # add color to map 
@@ -372,6 +355,7 @@ leading_cd_data %>%
 ##### 3.2.1 motality rate in New York City from 2004 to 2014
 
 ```{r}
+
 # annual mortality rate in New York City from 2004 to 2010
 year_death_rate = total_death_data %>%
   group_by(borough, year) %>%
@@ -379,9 +363,24 @@ year_death_rate = total_death_data %>%
   mutate(motality_rate = total_borough_death/population) 
   
 
-year_death_rate %>%
+year_death_plot = year_death_rate %>%
   ggplot(aes(x = year, y = motality_rate, group = borough, color = borough)) +
-  geom_line() + geom_point()
+  geom_line() + 
+  labs(x = "Year", 
+         y = "Crude motality rate", 
+         title = "Crude motality rate in New York City across time") + 
+theme(
+  panel.background = element_rect(fill = "white",
+                                colour = "white",
+                                size = 0.5, linetype = "solid"),
+  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey"), 
+  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey")
+  )
+
+year_death_plot
+
 
 ```
 
@@ -417,21 +416,104 @@ age_death_cause = age_death_data %>%
 # death by gender in each borough by year
 gender_death_cause = gender_death_data2 %>%
   group_by(gender, cause_of_death) %>%
-  summarise(average_death = mean(sum(number_cs_boro_gdr))) %>%
+  summarise(average_death = sum(number_cs_boro_gdr)/11) %>%
   top_n(n = 10, wt = average_death) %>%
   arrange(gender, desc(average_death))
 
-par(mfrow = c(2,1))
-gender_death_cause %>% 
+
+female = gender_death_cause %>% 
   filter(gender == "female") %>%
   ggplot(aes(x = reorder(cause_of_death, average_death), y = average_death)) +
-  geom_bar(stat = "identity", aes(fill = gender) ) 
+  geom_bar(stat = "identity", fill = "lightblue") +
 
-gender_death_cause %>% 
+  labs(x = "Cause of death", 
+         y = "Number of death", 
+         title = "leading cause of death for female") + 
+theme(
+  panel.background = element_rect(fill = "white",
+                                colour = "white",
+                                size = 0.5, linetype = "solid"),
+  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey"), 
+  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey")
+  ) +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6))
+
+male = gender_death_cause %>% 
   filter(gender == "male") %>%
   ggplot(aes(x = reorder(cause_of_death, average_death), y = average_death)) +
-  geom_bar(stat = "identity", aes(fill = gender) ) 
-# death 
+  geom_bar(stat = "identity", fill = "red" ) +
+  ylim(c(0, 10000)) +
+  
+theme(
+  panel.background = element_rect(fill = "white",
+                                colour = "white",
+                                size = 0.5, linetype = "solid"),
+  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey"), 
+  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey")
+  ) +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
+   labs(x = "Cause of death", 
+         y = "Number of death", 
+         title = "leading cause of death for male")
+  
+
+ggarrange(male, female, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
+```
+
+##### by gender and borough
+```{r}
+
+gender_death_cause2 = gender_death_data2 %>%
+  group_by(gender, cause_of_death, borough) %>%
+  summarise(average_death_br = sum(number_cs_boro_gdr)/11) %>%
+  top_n(n = 10, wt = average_death_br) %>%
+  arrange(gender, desc(average_death_br))
+
+female1 = gender_death_cause2 %>% 
+  filter(gender == "female") %>%
+  ggplot(aes(x = reorder(cause_of_death, average_death_br), y = average_death_br, fill = borough)) +
+  geom_bar(stat = "identity") +
+
+  labs(x = "Cause of death", 
+         y = "Number of death", 
+         title = "leading cause of death for female") + 
+theme(
+  panel.background = element_rect(fill = "white",
+                                colour = "white",
+                                size = 0.5, linetype = "solid"),
+  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey"), 
+  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey")
+  ) +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6))
+
+male1 = gender_death_cause2 %>% 
+  filter(gender == "male") %>%
+  ggplot(aes(x = reorder(cause_of_death, average_death_br), y = average_death_br, fill = borough)) +
+  geom_bar(stat = "identity" ) +
+  ylim(c(0, 10000)) +
+  
+theme(
+  panel.background = element_rect(fill = "white",
+                                colour = "white",
+                                size = 0.5, linetype = "solid"),
+  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey"), 
+  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey")
+  ) +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
+   labs(x = "Cause of death", 
+         y = "Number of death", 
+         title = "leading cause of death for male")
+  
+
+ggarrange(male1, female1, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
 ```
 
 #### by. race
