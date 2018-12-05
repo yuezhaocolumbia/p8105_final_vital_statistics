@@ -480,7 +480,7 @@ birth_nat_age_plot_data %>%
   labs(title = "Birth trend in different maternal age in NYC for each maternal nativity",
       y = "Proportion of number of  birth",
       x = "Year",
-      color = "Maternal Nativity") +
+      color = "Maternal age") +
   theme_bw() +
   scale_x_continuous(breaks=seq(2000, 2014, 5)) +
   viridis::scale_color_viridis(discrete = TRUE) +
