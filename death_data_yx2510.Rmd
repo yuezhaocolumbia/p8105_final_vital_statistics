@@ -268,7 +268,8 @@ cd_death_rate %>%
    labs(title = "10-year average crude mortality rate in each community district in New York City",
              x = "Community District",
              y = "Average Motality Rate") +
-        theme(axis.text.x = element_text(angle=90, vjust=0.6))
+        theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
+  viridis::scale_fill_viridis(discrete = TRUE) 
 
   
 ```
@@ -343,22 +344,9 @@ specific_death_rate %>%
         theme(axis.text.x = element_text(angle=90, size = 8, vjust=0.6)) +
         theme(legend.position="bottom", 
               legend.key.size = unit(.1, "in")) +
-    coord_flip()
+    coord_flip()  +
+  viridis::scale_fill_viridis(discrete = TRUE)
   
-  
-  
-  
-leading_cd_data = specific_death_rate %>%
-  group_by(borough) %>%
-  top_n(n = 10, wt = mean_cs_death_rate) %>%
-  mutate(cause_of_death = as.factor(cause_of_death)) 
-
-# 不知道为啥出现两列unexpected column
-leading_cd_data %>%
-  ggplot(aes(x = reorder(cause_of_death, mean_cs_death_rate), y = mean_cs_death_rate)) +
-  geom_bar(stat = "identity") +
-  facet_grid(.~ borough) +
-  theme(axis.text.x = element_text(angle=90, vjust=0.6))
   
 ```
 
@@ -473,16 +461,10 @@ female1 = gender_death_cause2 %>%
   labs(x = "Cause of death", 
          y = "Number of death", 
          title = "leading cause of death for female") + 
-theme(
-  panel.background = element_rect(fill = "white",
-                                colour = "white",
-                                size = 0.5, linetype = "solid"),
-  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey"), 
-  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey")
-  ) +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6))
+theme_bw()+
+   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
+  
+  viridis::scale_fill_viridis(discrete = TRUE) 
 
 male1 = gender_death_cause2 %>% 
   filter(gender == "male") %>%
@@ -490,21 +472,30 @@ male1 = gender_death_cause2 %>%
   geom_bar(stat = "identity" ) +
   ylim(c(0, 10000)) +
   
-theme(
-  panel.background = element_rect(fill = "white",
-                                colour = "white",
-                                size = 0.5, linetype = "solid"),
-  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey"), 
-  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey")
-  ) +
+theme_bw()+
    theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
    labs(x = "Cause of death", 
          y = "Number of death", 
-         title = "leading cause of death for male") 
+         title = "leading cause of death for male") +
+  viridis::scale_fill_viridis(discrete = TRUE) 
 
 ggarrange(male1, female1, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
+```
+#### by time
+```{r}
+gender_death_data2 %>%
+   group_by(year, gender) %>%
+  summarise(total_death = sum(number_cs_boro_gdr)) %>%
+  ggplot(aes(x = year, y = total_death, color = gender)) +
+  geom_point() +
+  geom_line() + 
+   labs(title = "Number of death in different gender group in New York City",
+             x = "Year",
+             y = "Number of death")  + 
+  theme_bw()+
+  viridis::scale_color_viridis(discrete = TRUE) +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6))
+  
 ```
 
 #### 3.4 by race
@@ -535,15 +526,7 @@ hispanic = race_death_cause %>%
   labs(x = "Cause of death", 
          y = "Number of death", 
          title = "leading cause of death for Hispanic") + 
-theme(
-  panel.background = element_rect(fill = "white",
-                                colour = "white",
-                                size = 0.5, linetype = "solid"),
-  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey"), 
-  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey")
-  ) +
+theme_bw() +
    theme(axis.text.x = element_text(angle=90, vjust=0.6))
 
 # asian
@@ -552,15 +535,7 @@ asian = race_death_cause %>%
   ggplot(aes(x = reorder(cause_of_death, cs_death_race), y = cs_death_race)) +
   geom_bar(stat = "identity", fill = "aquamarine1" ) +
   
-theme(
-  panel.background = element_rect(fill = "white",
-                                colour = "white",
-                                size = 0.5, linetype = "solid"),
-  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey"), 
-  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey")
-  ) +
+theme_bw() +
    theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
    labs(x = "Cause of death", 
          y = "Number of death", 
@@ -576,15 +551,7 @@ white =
    labs(x = "Cause of death", 
          y = "Number of death", 
          title = "leading cause of death for white")  +
-theme(
-  panel.background = element_rect(fill = "white",
-                                colour = "white",
-                                size = 0.5, linetype = "solid"),
-  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey"), 
-  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey")
-  ) 
+theme_bw() 
 
 # black
 black = 
@@ -596,16 +563,7 @@ black =
    labs(x = "Cause of death", 
          y = "Number of death", 
          title = "leading cause of death for the black") +
-theme(
-  panel.background = element_rect(fill = "white",
-                                colour = "white",
-                                size = 0.5, linetype = "solid"),
-  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey"), 
-  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey")
-  ) 
-
+theme_bw()
 ggarrange(hispanic, asian, white, black, ncol=2, nrow=2, common.legend = TRUE, legend="bottom")
 ```
 ##### by race and borough
@@ -622,16 +580,9 @@ race_death_cd %>%
   labs(x = "Cause of death", 
          y = "Number of death", 
          title = "leading cause of death for Hispanic") + 
-theme(
-  panel.background = element_rect(fill = "white",
-                                colour = "white",
-                                size = 0.5, linetype = "solid"),
-  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey"), 
-  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey")
-  ) +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6))
+theme_bw() +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
+  viridis::scale_fill_viridis(discrete = TRUE) 
 
 race_death_cd %>% 
   filter(race == "Asian Non-Hispanic") %>%
@@ -640,17 +591,10 @@ race_death_cd %>%
 
   labs(x = "Cause of death", 
          y = "Number of death", 
-         title = "leading cause of death for Asian") + 
-theme(
-  panel.background = element_rect(fill = "white",
-                                colour = "white",
-                                size = 0.5, linetype = "solid"),
-  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey"), 
-  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey")
-  ) +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6))
+         title = "leading cause of death for Asian") +
+  theme_bw()+
+   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
+  viridis::scale_fill_viridis(discrete = TRUE) 
 
  
 race_death_cd %>% 
@@ -661,17 +605,10 @@ race_death_cd %>%
   labs(x = "Cause of death", 
          y = "Number of death", 
          title = "leading cause of death for White") + 
-theme(
-  panel.background = element_rect(fill = "white",
-                                colour = "white",
-                                size = 0.5, linetype = "solid"),
-  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey"), 
-  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey")
-  ) +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6))
-  
+theme_bw()+
+   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
+  viridis::scale_fill_viridis(discrete = TRUE) 
+   
 
   
 race_death_cd %>% 
@@ -682,18 +619,27 @@ race_death_cd %>%
   labs(x = "Cause of death", 
          y = "Number of death", 
          title = "leading cause of death for Black") + 
-theme(
-  panel.background = element_rect(fill = "white",
-                                colour = "white",
-                                size = 0.5, linetype = "solid"),
-  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey"), 
-  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey")
-  ) +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6))
+theme_bw() +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
+  viridis::scale_fill_viridis(discrete = TRUE) 
   
 
+```
+
+#### by time
+```{r}
+race_death_data2 %>%
+  group_by(race, year) %>%
+  summarise(total_death_yr_rc = sum(borough_race_death)) %>%
+  ggplot(aes(x = year, y = total_death_yr_rc, color = race)) +
+  geom_line() +
+  geom_point() +
+  theme_bw()
+  labs(x = "Year", 
+         y = "Number of death", 
+         title = "Change in total number of death in each race group") + 
+  viridis::scale_fill_viridis(discrete = TRUE)  
+  
 ```
 
 #### 3.5 by age group 
@@ -716,15 +662,7 @@ over_65 = age_death_cause %>%
   labs(x = "Cause of death", 
          y = "Number of death", 
          title = "leading cause of death for over 65 year old group ") + 
-theme(
-  panel.background = element_rect(fill = "white",
-                                colour = "white",
-                                size = 0.5, linetype = "solid"),
-  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey"), 
-  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey")
-  ) +
+theme_bw()+
    theme(axis.text.x = element_text(angle=90, vjust=0.6))
 
 
@@ -735,15 +673,7 @@ premature = age_death_cause %>%
   labs(x = "Cause of death", 
          y = "Number of death", 
          title = "leading cause of premature death ") + 
-theme(
-  panel.background = element_rect(fill = "white",
-                                colour = "white",
-                                size = 0.5, linetype = "solid"),
-  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey"), 
-  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey")
-  ) +
+theme_bw()+
    theme(axis.text.x = element_text(angle=90, vjust=0.6))
 
 ggarrange(over_65, premature, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
@@ -764,16 +694,10 @@ over_65_2 = age_death_data3 %>%
   labs(x = "Cause of death", 
          y = "Number of death", 
          title = "leading cause of death for over 65 year old group ") + 
-theme(
-  panel.background = element_rect(fill = "white",
-                                colour = "white",
-                                size = 0.5, linetype = "solid"),
-  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey"), 
-  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey")
-  ) +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6))
+theme_bw() +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
+  viridis::scale_fill_viridis(discrete = TRUE) 
+over_65_2
 
 premature2 = age_death_data3 %>%
   filter(age_group == "Premature Death") %>%
@@ -782,16 +706,10 @@ premature2 = age_death_data3 %>%
   labs(x = "Cause of death", 
          y = "Number of death", 
          title = "leading cause of death for over 65 year old group ") + 
-theme(
-  panel.background = element_rect(fill = "white",
-                                colour = "white",
-                                size = 0.5, linetype = "solid"),
-  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey"), 
-  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey")
-  ) +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6))
+theme_bw()+
+   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
+  viridis::scale_fill_viridis(discrete = TRUE) 
+premature2
 
 ```
 
