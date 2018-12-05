@@ -175,6 +175,16 @@ age_death_data2 = age_death_data %>%
   group_by(borough, year, age_group, cause_of_death) %>%
   summarise(borough_age_death = sum(number, na.rm = TRUE))
 
+# aggregate age groups
+age_death_data3 = age_death_data2 %>%
+  ungroup %>%
+  mutate(age_group = case_when(
+    !(age_group  %in% c("1_12months", "28days", "65_69", "70_74", "75_79", "80_84", "85")) ~ "Premature Death",
+    age_group %in% c("65_69", "70_74", "75_79", "80_84", "85") ~ ">65 age death",
+    age_group == "28days" ~ "new born death",
+    age_group == "1_12months" ~ "1_12months death"
+  ) )
+
 
 ```
 
@@ -232,6 +242,7 @@ replace_cd = function(df){
 total_death_data = replace_cd(total_death_data)
 gender_death_data2 = replace_cd(gender_death_data2)
 race_death_data2 = replace_cd(race_death_data2)
+age_death_data2 = replace_cd(age_death_data2)
 
 ```
 
@@ -515,7 +526,7 @@ theme(
 ggarrange(male1, female1, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
 ```
 
-#### by. race
+#### 3.5 by. race
 ```{r}
 
 race_death_data2 = race_death_data2 %>%
