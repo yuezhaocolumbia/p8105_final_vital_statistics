@@ -1,0 +1,457 @@
+report\_death
+================
+Yue Zhao
+2018年12月4日
+
+``` r
+library(haven)
+library(dplyr)
+library(tidyverse)
+library(stringi)
+library(ggplot2)
+library(ggmap)
+library(rgeos)
+library(maptools)
+library(geojsonio)
+library(viridis)
+```
+
+| Name           | UNI    | Work       |
+|----------------|--------|------------|
+| Yue Zhao       | yz3297 | Death data |
+| Xue Yang       | xy2397 | Birth data |
+| Yi Xiao        | yx2510 | Death data |
+| Kangkang Zhang | kz2334 | Birth Data |
+
+[Click here for the data](%22www.google.com%22) 最后别忘了放link
+
+Motivation
+==========
+
+### Understanding the pattern of birth and death is of critical importance in identifying public health issue. Knowing the causes of death, especially the avoidable ones, helps us to establish intervention for better outcomes. Difference in death rate, birth rate and cause of death among different groups can even indicate socioeconomic inequility. In this study, we are interested in the cause of deaths and birth rate in New York City. We will further investigate whether there are disparities among different age, ethnicity and sex groups.
+
+Related work
+============
+
+### Vital statistics is a very interesting topic to explore and we can use all kinds of data analysis techniques in analyzing the data. The nature of the vital statistics data cannot be analyzed with a linear regression.
+
+Initial questions: What questions are you trying to answer? How did these questions evolve over the course of the project? What new questions did you consider in the course of your analysis?
+==============================================================================================================================================================================================
+
+### We are trying to explore the factors related to the mortality rate and the Cause of Deaths in New York, including geographic, time, age, gender and race.
+
+Death Data Analysis
+===================
+
+1. data import
+--------------
+
+``` r
+#import death data from 2004 to 2014
+name = list.files(path = "./data", full.names = TRUE, pattern = "*.sas7bdat") 
+cd_data =  map_df(name, read_sas)  %>%
+  janitor::clean_names()
+year = as.data.frame(rep(2004:2014, each = 59)) 
+
+# add a column "year"
+cd_data = cbind(year, cd_data) 
+colnames(cd_data)[1] = "year"
+
+# import population data
+pop_data2 = read_csv("./data/New_York_City_Population_By_Community_Districts2.csv") %>%
+ janitor::clean_names() %>%
+  select(borough, cd_number, cd_name, x2000_population, x2010_population)
+  
+# merge the two datasets
+my_data = merge(pop_data2, cd_data, by.x = "cd_name", by.y = "community_district") %>%
+  arrange(cd_name, borough, year) 
+ 
+my_tidy_data = my_data %>% # we'll use 2000 year population data for 2000 - 2009, and 2010 year data for 2010 -2014 
+  mutate(population = ifelse(year < 2010, my_data$x2000_population, my_data$x2010_population)) %>%
+  select(-c(x2000_population, x2010_population)) %>% 
+  mutate(cd_name = as.factor(cd_name)
+         ) %>%
+  select(c(cd_name:year, x1:population))
+```
+
+The generated dataset consists of 649 observations and 586 columns. Each observation records information on population and death statistics in one of 59 community districts in New York City. Variables in the original dataset include sex, age, ethnicity and cause of death and their cross variable with each other. Since we are interested in cause of death in this project, we only kept cause of death and its cross information with other demographic variables. Noteworthily, the presence of a large proportion of NAs could be an issue in later steps.
+
+### Codebook for the categories
+
+Cause of death is denoted with c1 to c22, which represent Deaths due to: 1. septicemia, 2. HIV, 3. malignant neoplasms (cancer), 4. cancer of the colon, rectum, and anus, 5. cancer of the pancreas, 6. trachea, bronchus, and lung, 7. cancer of the breast (female), 8. cancer of the prostate, 9. diabetes mellitus, 10. use of or poisoning by psychoactive substance excluding alcohol and tobacco, 11. Alzheimer's disease, 12. diseases of the heart, 13. essential hypertension and hypertensive renal disease, 14. cerebrovascular diseases, 15. influenza and pneumonia, 16. chronic lower respiratory diseases, 17. chronic liver disease and cirrhosis, 18. Nephritis, Nephrotic Syndrome and Nephrosis, 19. accident except drug poisoning, 20. intentional self‐harm (suicide), 21. assault (homicide), respectively. 22. others
+
+Race/ethnicity is denoted with 1 to 5, standing for: 1. Hispanic, 3. Asian Non‐Hispanic, 4. White Non‐Hispanic, 5. Black Non‐Hispanic
+
+2. tidy the data
+----------------
+
+#### 2.1 dataset without demographic characteristics
+
+``` r
+# we are first dealing with death infomation without accounting for other demographic characteristics
+total_death_data = my_tidy_data %>%
+  select(cd_name: x22, population) %>%
+  gather(key = "cause_of_death", value = number, x1:x22)
+```
+
+#### 2.2 cause of death crossed with gender
+
+``` r
+# cause of death crossed with gender
+gender_death_data = my_tidy_data %>%
+   select(borough : year, c1male :c22female) %>%
+   gather (key = "cause_of_death", value = "number", c1male : c22female)   
+
+  gender_death_data = gender_death_data %>%
+   mutate(gender = ifelse(str_detect(gender_death_data$cause_of_death, "female"), "female", "male"))
+
+gender_death_data =gender_death_data %>%
+ mutate(cause_of_death = 
+       substr(gender_death_data$cause_of_death,1,str_locate(gender_death_data$cause_of_death, "[0-9][a-zA-Z]")[,1])
+ )  
+
+gender_death_data2 = gender_death_data %>%
+  group_by(borough, year, gender, cause_of_death) %>%
+  summarise(number_cs_boro_gdr = sum(number, na.rm = TRUE))
+  
+
+
+# sub-group population data - by gender
+nyc_demo_gender = my_data %>%
+  select(cd_number, borough, male, female, year) %>%
+  gather(key = "gender", value = "population_by_gender", male:female) %>%
+  group_by(borough, gender, year) %>%
+  summarise(borough_population_gender = sum(population_by_gender, na.rm =TRUE))
+
+  
+
+gender_death_data2 = merge(gender_death_data2, nyc_demo_gender, by = c("gender", "borough", "year")) 
+```
+
+#### 2.3 dataset crossed with age
+
+``` r
+# cause of death crossed with age 
+age_death_data = my_tidy_data %>%
+select(cd_name: year, c1age_1_12months:c22age_85) %>%
+  gather (key = "cause_of_death", value = "number", c1age_1_12months : c22age_85) 
+age_death_data = age_death_data %>% 
+  mutate(
+    age_group = 
+      substr(age_death_data$cause_of_death, str_locate(age_death_data$cause_of_death, "age")[,1] + 4, nchar(age_death_data$cause_of_death))
+    ) %>%
+  mutate(cause_of_death =  
+           substr(age_death_data$cause_of_death, 0, (str_locate(age_death_data$cause_of_death, "age")[,1] -1)))  
+age_death_data = age_death_data 
+
+# aggregate cd-wise number into borough-wise
+age_death_data = age_death_data %>%
+  group_by(borough, year, age_group, cause_of_death) %>%
+  summarise(borough_age_death = sum(number, na.rm = TRUE))
+
+# sub-group population data - by age
+nyc_demo_age = my_data %>%
+  select(cd_number, borough, age_28days : age_85, year) %>%
+  gather(key = "age_group", value = "population_by_age", age_28days: age_85) 
+
+nyc_demo_age = nyc_demo_age %>%
+   mutate(
+    age_group = 
+      substr(nyc_demo_age$age_group, str_locate(nyc_demo_age$age_group, "age")[,1] + 4, nchar(nyc_demo_age$age_group))
+    ) %>%
+  mutate(age_group =  as.factor(age_group)) %>%
+  group_by(borough, age_group, year) %>%
+  summarise(borough_age_population = sum(population_by_age, na.rm =TRUE)) 
+
+# merge
+age_death_data2 = merge(age_death_data, nyc_demo_age, by = c("borough", "age_group" , "year"))
+```
+
+#### 2.4 dataset crossed with race
+
+``` r
+# cause of death crossed with race 
+race_death_data = my_tidy_data %>%
+   select(cd_name: year, c11:c225) %>%
+     gather (key = "cause_of_death", value = "number", c11:c225) 
+
+race_death_data = race_death_data %>%
+  mutate(race = stri_sub(race_death_data$cause_of_death, -1)) %>%
+  mutate(
+    cause_of_death = 
+      substr(cause_of_death, start = 1, stop = nchar(race_death_data$cause_of_death)-1)
+                  ) 
+
+# aggregate cd-wise number into borough-wise
+race_death_data = race_death_data %>%
+  group_by(borough, year, race, as.factor(cause_of_death) )%>%
+  summarise(borough_race_death = sum(number, na.rm = TRUE))
+
+# sub-group population data - by race
+nyc_demo_race = my_data %>%
+  select(cd_number, borough, hispanic :black_non_hispanic, year) %>%
+  rename("1" = "hispanic", "3" = "asian_non_hispanic", "4"= "white_non_hispanic", "5" = "black_non_hispanic") %>%
+  gather(key = "race", value = "population_by_race", `1` : `5`)  %>%
+  group_by(borough, race, year) %>%
+  summarise(borough_race_population = sum(population_by_race, na.rm =TRUE)) 
+
+# merge
+race_death_data2 = merge(race_death_data, nyc_demo_race, by = c("borough", "race", "year"))
+```
+
+Now I added specific cause of death to the dataset.
+
+``` r
+replace_cd = function(df){ 
+ 
+  df$cause_of_death[df$cause_of_death == "x1"] = "septicemia" 
+  df$cause_of_death[df$cause_of_death == "x2"] = "HIV"
+  df$cause_of_death[df$cause_of_death == "x3"] = "malignant neoplasms (cancer)"
+  df$cause_of_death[df$cause_of_death == "x4"] = "cancer of the colon, rectum, and anus"
+  df$cause_of_death[df$cause_of_death == "x5"] = "cancer of the pancreas"
+  df$cause_of_death[df$cause_of_death == "x6"] = "trachea, bronchus, and lung"
+  df$cause_of_death[df$cause_of_death == "x7"] = "cancer of the breast (female)"
+  df$cause_of_death[df$cause_of_death == "x8"] = "cancer of the prostate"
+  df$cause_of_death[df$cause_of_death == "x9"] = " diabetes mellitus"
+  df$cause_of_death[df$cause_of_death == "x10"] = "psychoactive substance"
+  df$cause_of_death[df$cause_of_death == "x11"] = "Alzheimer's disease"
+  df$cause_of_death[df$cause_of_death == "x12"] = " diseases of the heart"
+  df$cause_of_death[df$cause_of_death == "x13"] = "hypertension/hypertensive renal disease"
+  df$cause_of_death[df$cause_of_death == "x14"] = "cerebrovascular diseases"
+  df$cause_of_death[df$cause_of_death == "x15"] = "influenza and pneumonia"
+  df$cause_of_death[df$cause_of_death == "x16"] = "chronic lower respiratory diseases"
+  df$cause_of_death[df$cause_of_death == "x17"] = "chronic liver disease and cirrhosis"
+  df$cause_of_death[df$cause_of_death == "x18"] = "Nephritis, Nephrotic Syndrome and Nephrosis"
+  df$cause_of_death[df$cause_of_death == "x19"] = "accident except drug poisoning"
+  df$cause_of_death[df$cause_of_death == "x20"] = "intentional self‐harm (suicide)"
+  df$cause_of_death[df$cause_of_death == "x21"] = "assault (homicide)"
+  df$cause_of_death[df$cause_of_death == "x22"] = "others"
+}
+
+##total_death_data = replace_cd(total_death_data)
+##race_death_data2 = replace_cd(race_death_data2)
+```
+
+3. data viasualization
+----------------------
+
+### 3.1 death data analysis by borough, community distribution and year
+
+#### 3.1.1 crude mortality data for the sample population
+
+``` r
+# 10-year average crude mortality rate in each community district in New York City
+cd_death_rate = total_death_data %>%
+  group_by(borough, cd_name, year) %>%
+  summarise(total_cd_death = sum(number, na.rm = TRUE), population = mean(population), cd_number = mean(as.numeric(cd_number))) %>%
+  mutate(motality_rate = total_cd_death/population) %>%
+  group_by(cd_name, borough) %>%
+  summarise(average_death_rate = mean(motality_rate), cd_number = mean(cd_number)) %>%
+  arrange(desc(average_death_rate))
+
+
+cd_death_rate %>%
+   ggplot(aes(x = reorder(cd_name,average_death_rate), y = average_death_rate, fill = borough)) +
+   geom_bar(stat = "identity") +
+   labs(title = "10-year average crude mortality rate in each community district in New York City",
+             x = "Community District",
+             y = "Average Motality Rate") +
+        theme(axis.text.x = element_text(angle=90, vjust=0.6))
+```
+
+![](report_death_files/figure-markdown_github/crude%20mortality%20rate-1.png)
+
+``` r
+# 10-year average crude mortality rate in each borough in New York City
+borough_death_rate = total_death_data %>%
+  group_by(borough, year) %>%
+  summarise(total_borough_death = sum(number, na.rm = TRUE), population = sum(population)/22) %>%
+  mutate(motality_rate = total_borough_death/population) %>%
+  group_by(borough) %>%
+  summarise(average_death_rate = mean(motality_rate))
+
+borough_death_rate %>%
+   ggplot(aes(x = borough, y = average_death_rate)) +
+   geom_bar(stat = "identity",width = .75, fill="tomato2") +
+   labs(title = "10-year average crude mortality rate in each borough in New York City",
+             x = "Borough",
+             y = "Average Motality Rate") +
+        theme(axis.text.x = element_text(angle=90, vjust=0.6))
+```
+
+![](report_death_files/figure-markdown_github/crude%20mortality%20rate-2.png)
+
+We can see that the mortality rate are higher on average in Bronx and Brooklyn. The boroughs with highest mortality are Coney Island in Brooklyn and Riverdale in Bronx. The areas with more wealthy people like Manhattan and Queens have a relative low mortality rate overall.
+
+#### 3.1.2 map: crude mortality data by community district
+
+``` r
+URL <- "http://services5.arcgis.com/GfwWNkhOj9bNBqoJ/arcgis/rest/services/nycd/FeatureServer/0/query?where=1=1&outFields=*&outSR=4326&f=geojson"
+fil <- "nyc_community_districts.geojson"
+if (!file.exists(fil)) download.file(URL, fil)
+
+nyc_districts = geojson_read(fil, what="sp")
+# nyc_districts@data =  merge(nyc_districts@data, cd_death_rate, by.x = "BoroCD", by.y = "cd_number")
+
+nyc_districts_map = fortify(nyc_districts, region="BoroCD")
+
+mids = cbind.data.frame(as.data.frame(gCentroid(nyc_districts, byid=TRUE)), 
+                         id=nyc_districts$BoroCD)
+
+ny_map = ggplot() %>% + 
+         geom_map(data=nyc_districts_map, map=nyc_districts_map,
+                    aes(x=long, y=lat, map_id=id),
+                    color="#2b2b2b", size=0.15, fill=NA) + 
+        geom_text(data=mids, aes(x=x, y=y, label=id), size=2) +
+        coord_map() + 
+        ggthemes::theme_map()
+```
+
+    ## Warning: Ignoring unknown aesthetics: x, y
+
+``` r
+ nyc_districts@data =  merge(nyc_districts@data, cd_death_rate, by.x = "BoroCD", by.y = "cd_number")
+
+choro = data.frame(district=nyc_districts@data$BoroCD,
+                    average_death_rate=nyc_districts@data$average_death_rate)
+
+cd_death_map = nyc_districts_map %>%
+ggplot()+
+geom_map(map=nyc_districts_map,
+                    aes(x=long, y=lat, map_id=id),
+                    color="#2b2b2b", size=0.15, fill=NA) +
+geom_map(data=choro, map=nyc_districts_map,
+                    aes(fill=average_death_rate, map_id=district),
+                    color="#2b2b2b", size=0.15) +
+scale_fill_viridis(name="Average death rate") + 
+coord_map() +
+ggthemes::theme_map() +
+theme(legend.position=c(0.1,0.5)) +
+   labs(title = "average crude mortality rate in each community district in New York City from 2004 to 2014"
+            )
+```
+
+    ## Warning: Ignoring unknown aesthetics: x, y
+
+``` r
+cd_death_map
+```
+
+![](report_death_files/figure-markdown_github/add%20map-1.png)
+
+Geographically speaking, the map shows a very interesting pattern that the far north and the far south part of New York are having the highest mortality rates. The middle part of New York is having a lower mortality rate. But this can also be confounded by the income level of the people living in those areas. Because the people live in the middle part usually have a higher income, they can afford the housing in the central area which are more expensive than the surrounding area.
+
+#### 3.1.3 cause-specific mortality rate
+
+``` r
+# cause-specific mortality rate in each borough
+specific_death_rate = total_death_data %>%
+  group_by(borough, year, cause_of_death) %>%
+  summarise(cause_specific_death = sum(number, na.rm = TRUE), population = sum(population)) %>% # calculate the population  in each borough and number of people died of each cause 
+  mutate(cause_specific_death_rate = cause_specific_death/population) %>% # calculate cause-specific mortality rate
+  group_by(borough, cause_of_death) %>% # get average death rate
+  summarise(mean_cs_death_rate = mean(cause_specific_death_rate)) %>%
+  arrange(borough, mean_cs_death_rate)
+
+specific_death_rate %>%
+  ggplot(aes(x = reorder(cause_of_death, mean_cs_death_rate), y = mean_cs_death_rate)) +
+  geom_bar(aes(fill = cause_of_death), stat = "identity") +
+  facet_grid(. ~ borough)  +
+   labs(title = "10-year average cause-specific crude mortality rate in each borough",
+             x = "Cause of Death",
+             y = "Cause-specific Mortality Rate",
+              caption = "Source: vital statistics database: 2004-2014") +
+        theme(axis.text.x = element_text(angle=90, size = 8, vjust=0.6)) +
+        theme(legend.position="bottom", 
+              legend.key.size = unit(.1, "in")) +
+    coord_flip()
+```
+
+![](report_death_files/figure-markdown_github/unnamed-chunk-6-1.png)
+
+Note: x1-x22 is the same as c1-c22 in the codebook.
+
+We can now see that x12, which is the disease of the heart, is the leading cause of deaths in all areas. Then x3, cancer, is the second most common cause of deaths in all areas. Overall, in terms of Cause of Deaths distribution across areas, we do not see a big difference in the structure of the cause of deaths.
+
+### 3.2 Additional Analysis: Death data analysis by year
+
+#### 3.2.1 motality rate in New York City from 2004 to 2014
+
+``` r
+# annual mortality rate in New York City from 2004 to 2010
+year_death_rate = total_death_data %>%
+  group_by(borough, year) %>%
+  summarise(total_borough_death = sum(number, na.rm = TRUE), population = sum(population)/22) %>%
+  mutate(motality_rate = total_borough_death/population) 
+  
+
+year_death_rate %>%
+  ggplot(aes(x = year, y = motality_rate, group = borough, color = borough)) +
+  geom_line() + geom_point()
+```
+
+![](report_death_files/figure-markdown_github/unnamed-chunk-7-1.png)
+
+From a longitudinal perspective, the mortality rate goes down as the years go by. The mortality rate for Brooklyn, Manhattan and Bronx are clustered together in terms of years. Staten Island has a higher mortality rate overall and Queens has the lowest mortality rate. There is a drop in mortality rates between 2006 and 2007. In 2010, there is a second drop in mortality rates.
+
+#### 3.2.2 leading cause of death in selected years
+
+``` r
+year_cs_death_ny = total_death_data %>%
+  group_by(year, cause_of_death) %>%
+  summarise(specific_death_number = sum(number, na.rm = TRUE), total_population = sum(population)) %>%
+  mutate(motality_rate = specific_death_number/total_population) %>%
+filter(year %in% c("2004", "2008", "2012", "2014")) %>%
+  group_by(year) %>%
+  top_n(n = 10, wt = motality_rate) 
+  
+year_cs_death_ny %>%
+  arrange(year, desc(motality_rate)) %>%
+  knitr::kable()
+```
+
+|  year| cause\_of\_death |  specific\_death\_number|  total\_population|  motality\_rate|
+|-----:|:-----------------|------------------------:|------------------:|---------------:|
+|  2004| x12              |                    20537|            8005208|       0.0025655|
+|  2004| x3               |                    12020|            8005208|       0.0015015|
+|  2004| x22              |                     6615|            8005208|       0.0008263|
+|  2004| x15              |                     2867|            8005208|       0.0003581|
+|  2004| x6               |                     2741|            8005208|       0.0003424|
+|  2004| x14              |                     1676|            8005208|       0.0002094|
+|  2004| x9               |                     1667|            8005208|       0.0002082|
+|  2004| x16              |                     1605|            8005208|       0.0002005|
+|  2004| x4               |                     1365|            8005208|       0.0001705|
+|  2004| x2               |                     1358|            8005208|       0.0001696|
+|  2008| x12              |                    18956|            8005208|       0.0023680|
+|  2008| x3               |                    11537|            8005208|       0.0014412|
+|  2008| x22              |                     7137|            8005208|       0.0008915|
+|  2008| x6               |                     2636|            8005208|       0.0003293|
+|  2008| x15              |                     2192|            8005208|       0.0002738|
+|  2008| x9               |                     1565|            8005208|       0.0001955|
+|  2008| x16              |                     1525|            8005208|       0.0001905|
+|  2008| x14              |                     1411|            8005208|       0.0001763|
+|  2008| x4               |                     1302|            8005208|       0.0001626|
+|  2008| x2               |                      999|            8005208|       0.0001248|
+|  2012| x12              |                    14540|            8171680|       0.0017793|
+|  2012| x3               |                    11901|            8171680|       0.0014564|
+|  2012| x22              |                     8989|            8171680|       0.0011000|
+|  2012| x6               |                     2615|            8171680|       0.0003200|
+|  2012| x15              |                     2155|            8171680|       0.0002637|
+|  2012| x9               |                     1720|            8171680|       0.0002105|
+|  2012| x16              |                     1579|            8171680|       0.0001932|
+|  2012| x14              |                     1531|            8171680|       0.0001874|
+|  2012| x4               |                     1257|            8171680|       0.0001538|
+|  2012| x7               |                     1005|            8171680|       0.0001230|
+|  2014| x12              |                    14278|            8171680|       0.0017473|
+|  2014| x3               |                    11866|            8171680|       0.0014521|
+|  2014| x22              |                     9400|            8171680|       0.0011503|
+|  2014| x6               |                     2399|            8171680|       0.0002936|
+|  2014| x15              |                     2104|            8171680|       0.0002575|
+|  2014| x16              |                     1741|            8171680|       0.0002131|
+|  2014| x9               |                     1721|            8171680|       0.0002106|
+|  2014| x14              |                     1663|            8171680|       0.0002035|
+|  2014| x4               |                     1151|            8171680|       0.0001409|
+|  2014| x7               |                      999|            8171680|       0.0001223|
+
+Discussion: What were your findings? Are they what you expect? What insights into the data can you make?
+--------------------------------------------------------------------------------------------------------

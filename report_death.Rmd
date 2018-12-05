@@ -1,11 +1,12 @@
 ---
-title: "Yx2510 data tidy"
-author: "Yi Xiao"
-date: "25/11/2018"
-output: html_document
+title: "report_death"
+author: "Yue Zhao"
+date: "2018年12月4日"
+output: github_document
 ---
-```{r, message = FALSE}
 
+
+```{r, message = FALSE}
 
 library(haven)
 library(dplyr)
@@ -21,7 +22,33 @@ library(viridis)
 
 ```
 
-# 1. data import
+Name  | UNI | Work
+------------- | --------------------- | --------------------
+Yue Zhao  | yz3297 | Death data
+Xue Yang | xy2397 | Birth data
+Yi Xiao | yx2510 | Death data
+Kangkang Zhang | kz2334 | Birth Data
+
+[Click here for the data]("www.google.com") 最后别忘了放link
+
+
+#Motivation
+
+###Understanding the pattern of birth and death is of critical importance in identifying public health issue. Knowing the causes of death, especially the avoidable ones, helps us to establish intervention for better outcomes. Difference in death rate, birth rate and cause of death among different groups can even indicate socioeconomic inequility. In this study, we are interested in the cause of deaths and birth rate in New York City. We will further investigate whether there are disparities among different age, ethnicity and sex groups. 
+
+#Related work 
+
+###Vital statistics is a very interesting topic to explore and we can use all kinds of data analysis techniques in analyzing the data. The nature of the vital statistics data cannot be analyzed with a linear regression. 
+
+#Initial questions: What questions are you trying to answer? How did these questions evolve over the course of the project? What new questions did you consider in the course of your analysis?
+
+###We are trying to explore the factors related to the mortality rate and the Cause of Deaths in New York, including geographic, time, age, gender and race. 
+
+
+
+
+#Death Data Analysis
+## 1. data import
 ```{r import data, message = FALSE, warning = FALSE}
 #import death data from 2004 to 2014
 name = list.files(path = "./data", full.names = TRUE, pattern = "*.sas7bdat") 
@@ -53,6 +80,8 @@ my_tidy_data = my_data %>% # we'll use 2000 year population data for 2000 - 2009
 
 The generated dataset consists of `r nrow(my_tidy_data)` observations  and `r ncol(my_tidy_data)` columns. Each observation records information on population and death statistics in one of `r n_distinct(my_tidy_data$cd_name)` community districts in New York City. Variables in the original dataset include sex, age, ethnicity and cause of death and their cross variable with each other. Since we are interested in cause of death in this project, we only kept cause of death and its cross information with other demographic variables. Noteworthily, the presence of a large proportion of NAs could be an issue in later steps.
 
+
+###Codebook for the categories
 Cause of death is denoted with c1 to c22, which represent Deaths due to:
 1. septicemia,
 2. HIV, 
@@ -81,10 +110,10 @@ Race/ethnicity is denoted with 1 to 5, standing for:
 1. Hispanic, 
 3. Asian Non‐Hispanic, 
 4. White Non‐Hispanic, 
-5. Black Non‐Hispanic,
+5. Black Non‐Hispanic
 
 
-# 2. tidy the data
+## 2. tidy the data
 #### 2.1 dataset without demographic characteristics
 ```{r split our dataset into several subsets}
 # we are first dealing with death infomation without accounting for other demographic characteristics
@@ -95,7 +124,7 @@ total_death_data = my_tidy_data %>%
    
 ```
 
-## 2.2 cause of death crossed with gender
+#### 2.2 cause of death crossed with gender
 ```{r}
 # cause of death crossed with gender
 gender_death_data = my_tidy_data %>%
@@ -132,7 +161,7 @@ gender_death_data2 = merge(gender_death_data2, nyc_demo_gender, by = c("gender",
 ```
 
 
-## 2.3 dataset crossed with age
+#### 2.3 dataset crossed with age
 ```{r}
 # cause of death crossed with age 
 age_death_data = my_tidy_data %>%
@@ -172,7 +201,7 @@ age_death_data2 = merge(age_death_data, nyc_demo_age, by = c("borough", "age_gro
 ```
 
 
-## 2.4 dataset crossed with race
+#### 2.4 dataset crossed with race
 ```{r}
 
 # cause of death crossed with race 
@@ -234,20 +263,11 @@ replace_cd = function(df){
   df$cause_of_death[df$cause_of_death == "x22"] = "others"
 }
 
-<<<<<<< HEAD
 ##total_death_data = replace_cd(total_death_data)
 ##race_death_data2 = replace_cd(race_death_data2)
-=======
-total_death_data = replace_cd(total_death_data)
-gender_death_data2 = replace_cd(gender_death_data2)
-race_death_data2 = replace_cd(race_death_data2)
-age_death_data2 = replace_cd(age_death_data2)
-age_death_data3 = replace_cd(age_death_data3)
-
->>>>>>> f807cb9bafabb0ae0b71033a722acedc01eb02b9
 ```
 
-# 3. data viasualization 
+## 3. data viasualization 
 ### 3.1 death data analysis by borough, community distribution and year
 #### 3.1.1 crude mortality data for the sample population
 
@@ -292,7 +312,9 @@ borough_death_rate %>%
   
 ```
 
-## 3.1.2 map: crude mortality data by community district
+We can see that the mortality rate are higher on average in Bronx and Brooklyn. The boroughs with highest mortality are Coney Island in Brooklyn and Riverdale in Bronx. The areas with more wealthy people like Manhattan and Queens have a relative low mortality rate overall. 
+
+#### 3.1.2 map: crude mortality data by community district
 ```{r add map}
 URL <- "http://services5.arcgis.com/GfwWNkhOj9bNBqoJ/arcgis/rest/services/nycd/FeatureServer/0/query?where=1=1&outFields=*&outSR=4326&f=geojson"
 fil <- "nyc_community_districts.geojson"
@@ -338,7 +360,10 @@ cd_death_map
 
 ```
 
-## 3.1.3 cause-specific mortality rate 
+Geographically speaking, the map shows a very interesting pattern that the far north and the far south part of New York are having the highest mortality rates. The middle part of New York is having a lower mortality rate. But this can also be confounded by the income level of the people living in those areas. Because the people live in the middle part usually have a higher income, they can afford the housing in the central area which are more expensive than the surrounding area. 
+
+
+#### 3.1.3 cause-specific mortality rate 
 ```{r}
 # cause-specific mortality rate in each borough
 specific_death_rate = total_death_data %>%
@@ -362,25 +387,16 @@ specific_death_rate %>%
               legend.key.size = unit(.1, "in")) +
     coord_flip()
   
+```  
   
   
-  
-leading_cd_data = specific_death_rate %>%
-  group_by(borough) %>%
-  top_n(n = 10, wt = mean_cs_death_rate) %>%
-  mutate(cause_of_death = as.factor(cause_of_death)) 
+Note: x1-x22 is the same as c1-c22 in the codebook.
 
-# 不知道为啥出现两列unexpected column
-leading_cd_data %>%
-  ggplot(aes(x = reorder(cause_of_death, mean_cs_death_rate), y = mean_cs_death_rate)) +
-  geom_bar(stat = "identity") +
-  facet_grid(.~ borough) +
-  theme(axis.text.x = element_text(angle=90, vjust=0.6))
-  
-```
+We can now see that x12, which is the disease of the heart, is the leading cause of deaths in all areas. Then x3, cancer, is the second most common cause of deaths in all areas. Overall, in terms of Cause of Deaths distribution across areas, we do not see a big difference in the structure of the cause of deaths. 
 
-#### 3.2 Death data analysis by year
-##### 3.2.1 motality rate in New York City from 2004 to 2014
+
+### 3.2 Additional Analysis: Death data analysis by year
+#### 3.2.1 motality rate in New York City from 2004 to 2014
 
 ```{r}
 # annual mortality rate in New York City from 2004 to 2010
@@ -396,7 +412,10 @@ year_death_rate %>%
 
 ```
 
-##### 3.2.2 leading cause of death in selected years 
+From a longitudinal perspective, the mortality rate goes down as the years go by. The mortality rate for Brooklyn, Manhattan and Bronx are clustered together in terms of years. Staten Island has a higher mortality rate overall and Queens has the lowest mortality rate. There is a drop in mortality rates between 2006 and 2007. In 2010, there is a second drop in mortality rates.
+
+
+#### 3.2.2 leading cause of death in selected years 
 
 ```{r crude cause-specific mortality rate in different year}
 year_cs_death_ny = total_death_data %>%
@@ -413,409 +432,10 @@ year_cs_death_ny %>%
   
 ```
 
-<<<<<<< HEAD
 
-=======
-### by year and borough 
-```{r}
-# identify the top ten death by borough
-lead_death3 = merge(lead_cause, total_death_data, by = c("year", "cause_of_death")) %>%
-  group_by(borough, year, cause_of_death) %>%
-  summarise(br_death_number = sum(number, na.rm = TRUE), br_population = sum(population)) %>%
-  mutate(br_rate = br_death_number/br_population)
-  
-yr00 =   
-lead_death3 %>% 
 
-  filter(year == 2000) %>%
-  ggplot(aes(reorder(x = cause_of_death, br_rate), y = br_rate, fill = borough)) +
-  geom_bar(stat = "identity") + 
-  theme_bw() +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-   labs(x = "Cause of death", 
-         y = "Crude mortality rate", 
-         title = "leading cause of death in 2000") +
-  coord_flip()  +
-  viridis::scale_fill_viridis(discrete = TRUE) 
-
-yr06 = 
-lead_death3 %>% 
-filter(year == 2006) %>%
-  ggplot(aes(reorder(x = cause_of_death, br_rate), y = br_rate, fill = borough)) +
-  geom_bar(stat = "identity") + 
-  theme_bw() +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-   labs(x = "Cause of death", 
-         y = "Crude mortality rate", 
-         title = "leading cause of death in 2006") +
-  coord_flip()  +
-  viridis::scale_fill_viridis(discrete = TRUE) 
-
-yr12 = 
-lead_death3 %>% 
-filter(year == 2012) %>%
-  ggplot(aes(reorder(x = cause_of_death, br_rate), y = br_rate, fill = borough)) +
-  geom_bar(stat = "identity") + 
-  theme_bw() +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-   labs(x = "Cause of death", 
-         y = "Crude mortality rate", 
-         title = "leading cause of death in 2012") +
-  coord_flip()  +
-  viridis::scale_fill_viridis(discrete = TRUE) 
-
-yr14=
-  lead_death3 %>% 
-filter(year == 2014) %>%
-  ggplot(aes(reorder(x = cause_of_death, br_rate), y = br_rate, fill = borough)) +
-  geom_bar(stat = "identity") + 
-  theme_bw() +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-   labs(x = "Cause of death", 
-         y = "Crude mortality rate", 
-         title = "leading cause of death in 2014") +
-  coord_flip()  +
-  viridis::scale_fill_viridis(discrete = TRUE) 
-
-yr00
-yr06
-yr12
-yr14
-  
-```
+##Discussion: What were your findings? Are they what you expect? What insights into the data can you make?
 
 
 
-#### 3.3 by gender
-```{r}
-# death by gender in each borough by year
-gender_death_cause = gender_death_data2 %>%
-  group_by(gender, cause_of_death) %>%
-  summarise(average_death = sum(number_cs_boro_gdr)/11) %>%
-  top_n(n = 10, wt = average_death) %>%
-  arrange(gender, desc(average_death))
-
-
-female = gender_death_cause %>% 
-  filter(gender == "female") %>%
-  ggplot(aes(x = reorder(cause_of_death, average_death), y = average_death)) +
-  geom_bar(stat = "identity", fill = "lightblue") +
-
-  labs(x = "Cause of death", 
-         y = "Number of death", 
-         title = "leading cause of death for female") + 
-theme_bw()+
-   theme(axis.text.x = element_text(angle=90, vjust=0.6))
-
-male = gender_death_cause %>% 
-  filter(gender == "male") %>%
-  ggplot(aes(x = reorder(cause_of_death, average_death), y = average_death)) +
-  geom_bar(stat = "identity", fill = "red" ) +
-  ylim(c(0, 10000)) +
-  
-theme_bw() +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-   labs(x = "Cause of death", 
-         y = "Number of death", 
-         title = "leading cause of death for male")
-  
-
-ggarrange(male, female, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
-```
-
-##### by gender and borough
-```{r}
-
-gender_death_cause2 = gender_death_data2 %>%
-  group_by(gender, cause_of_death, borough) %>%
-  summarise(average_death_br = sum(number_cs_boro_gdr)/11) %>%
-  top_n(n = 10, wt = average_death_br) %>%
-  arrange(gender, desc(average_death_br))
-
-female1 = gender_death_cause2 %>% 
-  filter(gender == "female") %>%
-  ggplot(aes(x = reorder(cause_of_death, average_death_br), y = average_death_br, fill = borough)) +
-  geom_bar(stat = "identity") +
-
-  labs(x = "Cause of death", 
-         y = "Number of death", 
-         title = "leading cause of death for female") + 
-theme_bw()+
-   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-  
-  viridis::scale_fill_viridis(discrete = TRUE) 
-
-male1 = gender_death_cause2 %>% 
-  filter(gender == "male") %>%
-  ggplot(aes(x = reorder(cause_of_death, average_death_br), y = average_death_br, fill = borough)) +
-  geom_bar(stat = "identity" ) +
-  ylim(c(0, 10000)) +
-  
-theme_bw()+
-   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-   labs(x = "Cause of death", 
-         y = "Number of death", 
-         title = "leading cause of death for male") +
-  viridis::scale_fill_viridis(discrete = TRUE) 
-
-ggarrange(male1, female1, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
-```
-#### by time
-```{r}
-gender_death_data2 %>%
-   group_by(year, gender) %>%
-  summarise(total_death = sum(number_cs_boro_gdr)) %>%
-  ggplot(aes(x = year, y = total_death, color = gender)) +
-  geom_point() +
-  geom_line() + 
-   labs(title = "Number of death in different gender group in New York City",
-             x = "Year",
-             y = "Number of death")  + 
-  theme_bw()+
-  viridis::scale_color_viridis(discrete = TRUE) +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6))
-  
-```
-
-#### 3.4 by race
-```{r}
-
-race_death_data2 = race_death_data2 %>%
-  ungroup() %>%
-  mutate(race = case_when(
-    race == 1 ~ "Hispanic",
-    race == 3 ~ "Asian Non-Hispanic",
-    race == 4 ~ "White Non-Hispanic",
-    race == 5 ~ "Black Non-hispanic"
-  )) 
-
-# identify the top leading cause in NYC
-
-
-race_death_cause  = race_death_data2%>%
-  group_by(race, cause_of_death) %>%
-  summarise(cs_death_race = sum(borough_race_death)/11)  %>% # average yearly death from 2004 to
-  top_n(n = 10, wt = cs_death_race) %>%
-  arrange(race, desc(cs_death_race)) 
-
-## plot for hispanic
-race_death_cause %>% 
-  filter(race == "Hispanic") %>%
-  ggplot(aes(x = reorder(cause_of_death, cs_death_race), y = cs_death_race)) +
-  geom_bar(stat = "identity", fill = "antiquewhite") +
-
-  labs(x = "Cause of death", 
-         y = "Number of death", 
-         title = "leading cause of death for Hispanic") + 
-theme_bw() +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6))
-  
-
-# asian
-asian = race_death_cause %>% 
-  filter(race == "Asian Non-Hispanic") %>%
-  ggplot(aes(x = reorder(cause_of_death, cs_death_race), y = cs_death_race)) +
-  geom_bar(stat = "identity", fill = "aquamarine1" ) +
-  
-theme_bw() +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-   labs(x = "Cause of death", 
-         y = "Number of death", 
-         title = "leading cause of death for Asian Non-hispanic") +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6))
-  
-  # white
-white = 
-  race_death_cause %>%
-  filter(race == "White Non-Hispanic") %>%
-  ggplot(aes(x = reorder(cause_of_death, cs_death_race) , y = cs_death_race)) +
-  geom_bar(stat = "identity" , fill = "chartreuse2") + 
-    theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-   labs(x = "Cause of death", 
-         y = "Number of death", 
-         title = "leading cause of death for white")  +
-theme_bw() +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6))
-
-# black
-black = 
-  race_death_cause %>%
-  filter(race == "Black Non-hispanic") %>%
-  ggplot(aes(x = reorder(cause_of_death, cs_death_race) , y = cs_death_race)) +
-  geom_bar(stat = "identity", fill = "cyan2") + 
-    theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-   labs(x = "Cause of death", 
-         y = "Number of death", 
-         title = "leading cause of death for the black") +
-theme_bw() +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6))
-
-
-```
-##### by race and borough
-```{r}
-race_death_cd = merge(race_death_data2, race_death_cause) %>%
-  group_by(race, cause_of_death, borough) %>%
-  summarise(race_ds_br = sum(borough_race_death)/10) 
-
-race_death_cd %>% 
-  filter(race == "Hispanic") %>%
-  ggplot(aes(x = reorder(cause_of_death, race_ds_br), y = race_ds_br, fill = borough)) +
-  geom_bar(stat = "identity") +
-
-  labs(x = "Cause of death", 
-         y = "Number of death", 
-         title = "leading cause of death for Hispanic") + 
-theme_bw() +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-  viridis::scale_fill_viridis(discrete = TRUE) 
-
-race_death_cd %>% 
-  filter(race == "Asian Non-Hispanic") %>%
-  ggplot(aes(x = reorder(cause_of_death, race_ds_br), y = race_ds_br, fill = borough)) +
-  geom_bar(stat = "identity") +
-
-  labs(x = "Cause of death", 
-         y = "Number of death", 
-         title = "leading cause of death for Asian") +
-  theme_bw()+
-   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-  viridis::scale_fill_viridis(discrete = TRUE) 
-
- 
-race_death_cd %>% 
-  filter(race == "White Non-Hispanic") %>%
-  ggplot(aes(x = reorder(cause_of_death, race_ds_br), y = race_ds_br, fill = borough)) +
-  geom_bar(stat = "identity") +
-
-  labs(x = "Cause of death", 
-         y = "Number of death", 
-         title = "leading cause of death for White") + 
-theme_bw()+
-   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-  viridis::scale_fill_viridis(discrete = TRUE) 
-   
-
-  
-race_death_cd %>% 
-  filter(race == "Black Non-hispanic") %>%
-  ggplot(aes(x = reorder(cause_of_death, race_ds_br), y = race_ds_br, fill = borough)) +
-  geom_bar(stat = "identity") +
-
-  labs(x = "Cause of death", 
-         y = "Number of death", 
-         title = "leading cause of death for Black") + 
-theme_bw() +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-  viridis::scale_fill_viridis(discrete = TRUE) 
-  
-
-```
-
-#### by time
-```{r}
-race_death_data2 %>%
-  group_by(race, year) %>%
-  summarise(total_death_yr_rc = sum(borough_race_death)) %>%
-  ggplot(aes(x = year, y = total_death_yr_rc, color = race)) +
-  geom_line() +
-  geom_point() +
-  theme_bw()
-  labs(x = "Year", 
-         y = "Number of death", 
-         title = "Change in total number of death in each race group") + 
-  viridis::scale_fill_viridis(discrete = TRUE)  
-  
-```
-
-#### 3.5 by age group 
-```{r}
-# leading cause of death in each age group
-age_death_cause = age_death_data3 %>%
-  group_by(age_group, cause_of_death) %>%
-  summarise(av_death_age = sum(borough_age_death)/11 ) %>%
-  top_n(n = 10, wt = av_death_age) %>%
-  arrange(age_group, desc(av_death_age)) 
-
-# not much useful info in the newborn and under 1 group 
-age_death_cause = age_death_cause %>%
-  filter(age_group == "Premature Death" | age_group == ">65 age death")
-
-over_65 = age_death_cause %>%
-  filter(age_group == ">65 age death") %>%
-  ggplot(aes(x = reorder(cause_of_death, av_death_age), y = av_death_age)) +
-  geom_bar(stat = "identity", fill = "antiquewhite1") + 
-  labs(x = "Cause of death", 
-         y = "Number of death", 
-         title = "leading cause of death for over 65 year old group ") + 
-theme_bw()+
-   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-coord_flip()
-
-
-premature = age_death_cause %>%
-  filter(age_group == "Premature Death") %>%
-  ggplot(aes(x = reorder(cause_of_death, av_death_age), y = av_death_age)) +
-  geom_bar(stat = "identity", fill = "cadetblue2") + 
-  labs(x = "Cause of death", 
-         y = "Number of death", 
-         title = "leading cause of premature death ") + 
-theme_bw()+
-   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-  coord_flip()
-
-ggarrange(over_65, premature, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
-```
-We see that for 1-12 months age group, the leading cause of deaths are "others". For less than 28 days, the leading cause of deaths are also "others". For 65-69 age group the leading cause of death is malignant neoplasms (cancer). For >85 years old, diseases of the heart is the leading cause.
-
-
-#### age borough
-```{r}
-age_death_data3 = merge(age_death_data3, age_death_cause) %>%
-  group_by(cause_of_death, age_group, borough) %>%
-  summarise(br_death_age = sum(av_death_age)/11) 
-
-over_65_2 = age_death_data3 %>%
-  filter(age_group == ">65 age death") %>%
-  ggplot(aes(x = reorder(cause_of_death, br_death_age), y = br_death_age, fill = borough)) +
-  geom_bar(stat = "identity") + 
-  labs(x = "Cause of death", 
-         y = "Number of death", 
-         title = "leading cause of death for over 65 year old group ") + 
-theme_bw() +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-  viridis::scale_fill_viridis(discrete = TRUE)  
-
-
-premature2 = age_death_data3 %>%
-  filter(age_group == "Premature Death") %>%
-  ggplot(aes(x = reorder(cause_of_death, br_death_age), y = br_death_age, fill = borough)) +
-  geom_bar(stat = "identity") + 
-  labs(x = "Cause of death", 
-         y = "Number of death", 
-         title = "leading cause of death for over 65 year old group ") + 
-theme_bw()+
-   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-  viridis::scale_fill_viridis(discrete = TRUE) 
-
-
-ggarrange(over_65_2, premature2, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
-
-```
-
-#### change of death number by age group 
-```{r}
-#age_death_data3 %>%
- # group_by(age_group, year)  %>%
-  #summarise(total_death = sum(borough_age_death)) %>%
-  #ggplot(aes(x = year, y = total_death, color = age_group)) +
-  #geom_line() +
-  #geom_point() +
-  # labs(title = "Number of death in different age group in New York City",
-   #          x = "Year",
-    #         y = "Number of death")  + 
-  #viridis::scale_color_viridis(discrete = TRUE) +
-   #theme(axis.text.x = element_text(angle=90, vjust=0.6))
-```
->>>>>>> f807cb9bafabb0ae0b71033a722acedc01eb02b9
 

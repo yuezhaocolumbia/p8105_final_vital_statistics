@@ -212,6 +212,7 @@ total_death_data = replace_cd(total_death_data)
 gender_death_data2 = replace_cd(gender_death_data2)
 race_death_data2 = replace_cd(race_death_data2)
 age_death_data2 = replace_cd(age_death_data2)
+age_death_data3 = replace_cd(age_death_data3)
 ```
 
 3. data viasualization
@@ -440,9 +441,10 @@ lead_death3 = merge(lead_cause, total_death_data, by = c("year", "cause_of_death
   summarise(br_death_number = sum(number, na.rm = TRUE), br_population = sum(population)) %>%
   mutate(br_rate = br_death_number/br_population)
   
-  
+yr00 =   
 lead_death3 %>% 
-filter(year == 2000) %>%
+
+  filter(year == 2000) %>%
   ggplot(aes(reorder(x = cause_of_death, br_rate), y = br_rate, fill = borough)) +
   geom_bar(stat = "identity") + 
   theme_bw() +
@@ -452,11 +454,8 @@ filter(year == 2000) %>%
          title = "leading cause of death in 2000") +
   coord_flip()  +
   viridis::scale_fill_viridis(discrete = TRUE) 
-```
 
-![](death_data_yx2510_files/figure-markdown_github/unnamed-chunk-9-1.png)
-
-``` r
+yr06 = 
 lead_death3 %>% 
 filter(year == 2006) %>%
   ggplot(aes(reorder(x = cause_of_death, br_rate), y = br_rate, fill = borough)) +
@@ -468,11 +467,8 @@ filter(year == 2006) %>%
          title = "leading cause of death in 2006") +
   coord_flip()  +
   viridis::scale_fill_viridis(discrete = TRUE) 
-```
 
-![](death_data_yx2510_files/figure-markdown_github/unnamed-chunk-9-2.png)
-
-``` r
+yr12 = 
 lead_death3 %>% 
 filter(year == 2012) %>%
   ggplot(aes(reorder(x = cause_of_death, br_rate), y = br_rate, fill = borough)) +
@@ -484,12 +480,9 @@ filter(year == 2012) %>%
          title = "leading cause of death in 2012") +
   coord_flip()  +
   viridis::scale_fill_viridis(discrete = TRUE) 
-```
 
-![](death_data_yx2510_files/figure-markdown_github/unnamed-chunk-9-3.png)
-
-``` r
-lead_death3 %>% 
+yr14=
+  lead_death3 %>% 
 filter(year == 2014) %>%
   ggplot(aes(reorder(x = cause_of_death, br_rate), y = br_rate, fill = borough)) +
   geom_bar(stat = "identity") + 
@@ -500,6 +493,26 @@ filter(year == 2014) %>%
          title = "leading cause of death in 2014") +
   coord_flip()  +
   viridis::scale_fill_viridis(discrete = TRUE) 
+
+yr00
+```
+
+![](death_data_yx2510_files/figure-markdown_github/unnamed-chunk-9-1.png)
+
+``` r
+yr06
+```
+
+![](death_data_yx2510_files/figure-markdown_github/unnamed-chunk-9-2.png)
+
+``` r
+yr12
+```
+
+![](death_data_yx2510_files/figure-markdown_github/unnamed-chunk-9-3.png)
+
+``` r
+yr14
 ```
 
 ![](death_data_yx2510_files/figure-markdown_github/unnamed-chunk-9-4.png)
@@ -622,6 +635,8 @@ race_death_data2 = race_death_data2 %>%
   )) 
 
 # identify the top leading cause in NYC
+
+
 race_death_cause  = race_death_data2%>%
   group_by(race, cause_of_death) %>%
   summarise(cs_death_race = sum(borough_race_death)/11)  %>% # average yearly death from 2004 to
@@ -629,7 +644,7 @@ race_death_cause  = race_death_data2%>%
   arrange(race, desc(cs_death_race)) 
 
 ## plot for hispanic
-hispanic = race_death_cause %>% 
+race_death_cause %>% 
   filter(race == "Hispanic") %>%
   ggplot(aes(x = reorder(cause_of_death, cs_death_race), y = cs_death_race)) +
   geom_bar(stat = "identity", fill = "antiquewhite") +
@@ -639,7 +654,11 @@ hispanic = race_death_cause %>%
          title = "leading cause of death for Hispanic") + 
 theme_bw() +
    theme(axis.text.x = element_text(angle=90, vjust=0.6))
+```
 
+![](death_data_yx2510_files/figure-markdown_github/unnamed-chunk-13-1.png)
+
+``` r
 # asian
 asian = race_death_cause %>% 
   filter(race == "Asian Non-Hispanic") %>%
@@ -650,7 +669,8 @@ theme_bw() +
    theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
    labs(x = "Cause of death", 
          y = "Number of death", 
-         title = "leading cause of death for Asian Non-hispanic")
+         title = "leading cause of death for Asian Non-hispanic") +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6))
   
   # white
 white = 
@@ -662,7 +682,8 @@ white =
    labs(x = "Cause of death", 
          y = "Number of death", 
          title = "leading cause of death for white")  +
-theme_bw() 
+theme_bw() +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6))
 
 # black
 black = 
@@ -674,11 +695,11 @@ black =
    labs(x = "Cause of death", 
          y = "Number of death", 
          title = "leading cause of death for the black") +
-theme_bw()
-ggarrange(hispanic, asian, white, black, ncol=2, nrow=2, common.legend = TRUE, legend="bottom")
+theme_bw() +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6))
 ```
 
-![](death_data_yx2510_files/figure-markdown_github/unnamed-chunk-13-1.png) \#\#\#\#\# by race and borough
+##### by race and borough
 
 ``` r
 race_death_cd = merge(race_death_data2, race_death_cause) %>%
@@ -793,7 +814,8 @@ over_65 = age_death_cause %>%
          y = "Number of death", 
          title = "leading cause of death for over 65 year old group ") + 
 theme_bw()+
-   theme(axis.text.x = element_text(angle=90, vjust=0.6))
+   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
+coord_flip()
 
 
 premature = age_death_cause %>%
@@ -804,7 +826,8 @@ premature = age_death_cause %>%
          y = "Number of death", 
          title = "leading cause of premature death ") + 
 theme_bw()+
-   theme(axis.text.x = element_text(angle=90, vjust=0.6))
+   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
+  coord_flip()
 
 ggarrange(over_65, premature, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
 ```
@@ -827,13 +850,9 @@ over_65_2 = age_death_data3 %>%
          title = "leading cause of death for over 65 year old group ") + 
 theme_bw() +
    theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-  viridis::scale_fill_viridis(discrete = TRUE) 
-over_65_2
-```
+  viridis::scale_fill_viridis(discrete = TRUE)  
 
-![](death_data_yx2510_files/figure-markdown_github/unnamed-chunk-17-1.png)
 
-``` r
 premature2 = age_death_data3 %>%
   filter(age_group == "Premature Death") %>%
   ggplot(aes(x = reorder(cause_of_death, br_death_age), y = br_death_age, fill = borough)) +
@@ -844,10 +863,12 @@ premature2 = age_death_data3 %>%
 theme_bw()+
    theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
   viridis::scale_fill_viridis(discrete = TRUE) 
-premature2
+
+
+ggarrange(over_65_2, premature2, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
 ```
 
-![](death_data_yx2510_files/figure-markdown_github/unnamed-chunk-17-2.png)
+![](death_data_yx2510_files/figure-markdown_github/unnamed-chunk-17-1.png)
 
 #### change of death number by age group
 
