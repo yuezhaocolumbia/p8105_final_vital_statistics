@@ -71,6 +71,30 @@ From these website, we successful got the data we want about the death and birth
 
 Moreover, from the computing club, we were introducted to create maps in ggplot, which is really cool. Combining with what we have learned about visualization and exploratory analysis in class, we are inspired to create some well-looled plot about the birth and death related stuff in the city of New York.
 
+#### Initial questions
+
+What questions are you trying to answer? How did these questions evolve over the course of the project? What new questions did you consider in the course of your analysis?
+
+The main questions we are trying to answer is:
+
+* How the birth number changes over the time from 2000 to 2014?
+
+* What the association between maternal and birth characteristics?
+
+When we begin our data manipulation, we found out that there are no individual datas in the website, the data are aggregated in three different ways: community district, zip code and census tract. 
+
+So our new question is:
+
+* Which aggregated data do we decide to use?
+
+Meanwhile, since all the data are aggregated, we can compare the related birth characteristics between the community district, zip code or census tract:
+
+* Is there any difference of the birth characteristics between different boroughs in the cith of New York?
+
+Moreover, the real data always contain a lot of missing value, so we have another question:
+
+* How to deal with the missing value rationally?
+
 
 
 
