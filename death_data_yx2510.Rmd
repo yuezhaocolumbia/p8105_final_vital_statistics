@@ -101,6 +101,21 @@ Race/ethnicity is denoted with 1 to 5, standing for:
 
 
 # 2. tidy the data
+
+#### 2.0 dealing with the missing value
+
+```{r}
+missing_value = 
+  my_tidy_data %>% 
+  summarise_all(funs(sum(is.na(.)))) %>% 
+  gather(term, num_na, everything()) %>% 
+  mutate(percent = num_na/nrow(my_tidy_data)) %>% 
+  filter(percent > 0.2) 
+
+
+```
+We filtered those variables with more than 20% of missing value and found `nrow(missing_value)` fell into this category. However, it is quite reasonable that no people from a certain age or gender group died of a certain disease in a specific year and neighbourhood and thus resulted in absence of recording. Missing data could suggest 0 death and removing them will lead to loss of valuable information. Therefore, we kept those missing value in our dataset.
+
 #### 2.1 dataset without demographic characteristics
 ```{r split our dataset into several subsets}
 # we are first dealing with death infomation without accounting for other demographic characteristics
