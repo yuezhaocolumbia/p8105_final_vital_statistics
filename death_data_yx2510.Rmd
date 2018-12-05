@@ -374,23 +374,14 @@ year_death_rate = total_death_data %>%
   mutate(motality_rate = total_borough_death/population) 
   
 
-year_death_plot = year_death_rate %>%
+year_death_rate %>%
   ggplot(aes(x = year, y = motality_rate, group = borough, color = borough)) +
   geom_line() + 
+  geom_point() +
   labs(x = "Year", 
          y = "Crude motality rate", 
          title = "Crude motality rate in New York City across time") + 
-theme(
-  panel.background = element_rect(fill = "white",
-                                colour = "white",
-                                size = 0.5, linetype = "solid"),
-  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey"), 
-  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey")
-  )
-
-year_death_plot
+  viridis::scale_color_viridis(discrete = TRUE)
 
 
 ```
@@ -412,17 +403,7 @@ year_cs_death_ny %>%
   
 ```
 
-#### 3.3 death data analysis by age
-```{r}
-age_death_cause = age_death_data %>%
-  group_by(age_group, borough, year) %>%
-  top_n(n = 10, wt = borough_age_death) %>%
-  arrange(year, borough, age_group, desc(borough_age_death))
-  
-
-```
-
-#### 3.4 by gender
+#### 3.3 by gender
 ```{r}
 # death by gender in each borough by year
 gender_death_cause = gender_death_data2 %>%
@@ -526,7 +507,7 @@ theme(
 ggarrange(male1, female1, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
 ```
 
-#### 3.5 by. race
+#### 3.4 by race
 ```{r}
 
 race_death_data2 = race_death_data2 %>%
@@ -715,7 +696,7 @@ theme(
 
 ```
 
-#### 3.6 by age group 
+#### 3.5 by age group 
 ```{r}
 # leading cause of death in each age group
 age_death_cause = age_death_data3 %>%
@@ -821,18 +802,11 @@ age_death_data3 %>%
   summarise(total_death = sum(borough_age_death)) %>%
   ggplot(aes(x = year, y = total_death, color = age_group)) +
   geom_line() +
+  geom_point() +
    labs(title = "Number of death in different age group in New York City",
              x = "Year",
              y = "Number of death")  + 
-theme(
-  panel.background = element_rect(fill = "white",
-                                colour = "white",
-                                size = 0.5, linetype = "solid"),
-  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey"), 
-  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
-                                colour = "grey")
-  ) +
+  viridis::scale_color_viridis(discrete = TRUE) +
    theme(axis.text.x = element_text(angle=90, vjust=0.6))
 ```
 
