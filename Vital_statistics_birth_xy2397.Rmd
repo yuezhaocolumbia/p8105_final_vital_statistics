@@ -14,7 +14,7 @@ library(tidyverse)
 Three different source of the data: community district, zip code and census tract
 ```{r}
 # community district
-birth2000 = haven::read_sas("./birth_data/community_district/cdall_00.sas7bdat")
+'birth2000 = haven::read_sas("./birth_data/community_district/cdall_00.sas7bdat")
 names(birth2000)
 ```
 

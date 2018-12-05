@@ -1,7 +1,7 @@
 Birth\_data\_report
 ================
 Xue Yang
-12/3/2018"
+12/3/2018
 
 This will detail how you completed your project, and should cover data collection and cleaning, exploratory analyses, alternative strategies, descriptions of approaches, and a discussion of results.
 
@@ -114,6 +114,10 @@ birth_data_un =
   left_join(cd_code_data, by = "cd") 
 ```
 
+The community\_district dataset contains 885 rows x 364 columns, which means that there are 885 birth related observations from year 2000 to 2014 in different community\_district in the city of New York. For the columns, each column indicates a category in a specific birth characteristics, and there are individual variables and crossed variales.
+
+Since the dataset is really large, we decide to analysis the data with each vairables (containing with several categories) respectively.
+
 ##### Deal with missing value
 
 After loading and cleaning the dataset, we find out that there are a lot of missing values in the dataset. We first checking the number and proportion of the missing values in each column
@@ -141,67 +145,47 @@ for our futher analysis.
 
 Visualizations, summaries, and exploratory statistical analyses. Justify the steps you took, and show any major changes to your ideas.
 
-##### Tidy the data for each variables separately
+##### Fill the missing value and tidy
+
+As we indicated above, we select the variables according to the missing value proportion and interest. For the variables we selected, we also need to deal with the missing value.
+
+We first calculate the "delta" and "percent", which indicating the differences and proportion between the total number and the sum of non missing value. If the "delta" is relatively small, this means that the missing value only contains a little information, which would not influence the further analysis.
+
+In this case, we fill the missing value with the same data from last year in the same community distric, if there are NAs for continuous three year, we fill the NA with 0.
 
 **Individual Variables**
 
 maternal age, maternal nativity, parity, maternal marital status, infant sex, infant birthweight
 
 ``` r
-# checking missing data for the data maternal age
-birth_data_un %>%
-  select(starts_with("age")) %>% 
-  summarise_all(funs(sum(is.na(.)))) %>% 
-  gather(term, num_na, everything()) %>% 
-  mutate(percent = num_na/885) 
-```
+# data maternal age
 
-    ## # A tibble: 9 x 3
-    ##   term    num_na percent
-    ##   <chr>    <int>   <dbl>
-    ## 1 age1tot    774  0.875 
-    ## 2 age2tot     84  0.0949
-    ## 3 age3tot     46  0.0520
-    ## 4 age4tot      0  0     
-    ## 5 age5tot      0  0     
-    ## 6 age6tot      0  0     
-    ## 7 age7tot      0  0     
-    ## 8 age8tot      0  0     
-    ## 9 age9tot    379  0.428
-
-``` r
 birth_data_un %>% 
   select(year, cd, birthtot, age1tot:age9tot) %>%
   gather(maternal_age, num, age1tot:age9tot) %>% 
   group_by(year, cd, birthtot) %>% 
   summarise(ttl = sum(num, na.rm = TRUE)) %>% 
-  mutate(delta = birthtot - ttl) %>% 
+  mutate(delta = birthtot - ttl, percent = delta/birthtot) %>% 
   arrange(desc(delta))
 ```
 
-    ## # A tibble: 885 x 5
+    ## # A tibble: 885 x 6
     ## # Groups:   year, cd [885]
-    ##    year     cd birthtot   ttl delta
-    ##    <fct> <dbl>    <dbl> <dbl> <dbl>
-    ##  1 03      102      842   833     9
-    ##  2 12      105      579   570     9
-    ##  3 00      103     2320  2312     8
-    ##  4 00      401     2533  2525     8
-    ##  5 02      316     1446  1438     8
-    ##  6 02      411      675   667     8
-    ##  7 02      501     2447  2439     8
-    ##  8 03      209     2694  2686     8
-    ##  9 05      112     2892  2884     8
-    ## 10 05      313     1171  1163     8
+    ##    year     cd birthtot   ttl delta percent
+    ##    <fct> <dbl>    <dbl> <dbl> <dbl>   <dbl>
+    ##  1 03      102      842   833     9 0.0107 
+    ##  2 12      105      579   570     9 0.0155 
+    ##  3 00      103     2320  2312     8 0.00345
+    ##  4 00      401     2533  2525     8 0.00316
+    ##  5 02      316     1446  1438     8 0.00553
+    ##  6 02      411      675   667     8 0.0119 
+    ##  7 02      501     2447  2439     8 0.00327
+    ##  8 03      209     2694  2686     8 0.00297
+    ##  9 05      112     2892  2884     8 0.00277
+    ## 10 05      313     1171  1163     8 0.00683
     ## # ... with 875 more rows
 
-Since the delta (the difference between total number and the non-missing number) is very small (less equal than 9). So we can delete some category with high proportion of missing data. In this case, there won't be much change in the data.
-
-So for the age variable, we delete the category "age1tot", "age9tot", (with missing proportion &gt;20%), for the rest category, we fill the NA with the data from last year in the same community distric.
-
 ``` r
-# data for maternal age
-
 maternal_age_nomiss_data =
   birth_data_un %>% 
   select(year, cd, cd_name, borough, birthtot, age1tot:age9tot) %>%
@@ -214,16 +198,9 @@ maternal_age_nomiss_data =
   summarise(number = sum(num)) %>% 
   spread(key = maternal_age, value = number) %>% 
   knitr::kable(digits = 3)
-
-maternal_age_data = 
-  birth_data_un %>% 
-  select(year, cd, cd_name, borough, birthtot, age1tot:age9tot) %>%
-  gather(maternal_age, num, age1tot:age9tot) %>% 
-  group_by(year, borough, maternal_age) %>% 
-  summarise(number = sum(num)) %>% 
-  spread(key = maternal_age, value = number) %>% 
-  knitr::kable(digits = 3)
 ```
+
+For the data for maternal age, the largest "delta" is 9, with percent 0.0107, we can fill the NA as we indicated above, and then tidy the new non-missing data.
 
 ``` r
 # data for maternal nativity
@@ -266,17 +243,9 @@ ma_nat_nomiss_data =
   summarise(number = sum(num)) %>% 
   spread(key = ma_nat, value = number) %>% 
   knitr::kable(digits = 3)
-
-
-born_demo_data = 
-  birth_data_un %>% 
-  select(year, cd, cd_name, borough, birthtot, nat1tot:nat2tot) %>%
-  gather(born_demo, num, nat1tot:nat2tot) %>% 
-  group_by(year, borough, born_demo) %>% 
-  summarise(number = sum(num)) %>% 
-  spread(key = born_demo, value = number) %>% 
-  knitr::kable(digits = 3)
 ```
+
+For the data for maternal nativity, the largest "delta" is 44, with percent 0.0229, we can fill the NA as we indicated above, and then tidy the new non-missing data.
 
 ``` r
 # data for parity
@@ -319,17 +288,9 @@ parity_nomiss_data =
   summarise(number = sum(num)) %>% 
   spread(key = parity, value = number) %>% 
   knitr::kable(digits = 3)
-  
-
-parity_data = 
-  birth_data_un %>% 
-  select(year, cd, cd_name, borough, birthtot, par1tot:par2tot) %>%
-  gather(parity, num, par1tot:par2tot) %>% 
-  group_by(year, borough, parity) %>% 
-  summarise(number = sum(num)) %>% 
-  spread(key = parity, value = number) %>% 
-  knitr::kable(digits = 3)
 ```
+
+For the data for parity, the largest "delta" is 22, with percent 0.00972, we can fill the NA as we indicated above, and then tidy the new non-missing data.
 
 ``` r
 # data for maternal marital status 
@@ -372,16 +333,9 @@ marry_nomiss_data =
   summarise(number = sum(num)) %>% 
   spread(key = marry_status, value = number) %>% 
   knitr::kable(digits = 3)
-
-marry_data = 
-  birth_data_un %>% 
-  select(year, cd, cd_name, borough, birthtot, mar1tot:mar2tot) %>%
-  gather(marry_status, num, mar1tot:mar2tot) %>% 
-  group_by(year, borough, marry_status) %>% 
-  summarise(number = sum(num)) %>% 
-  spread(key = marry_status, value = number) %>% 
-  knitr::kable(digits = 3)
 ```
+
+For the data for parity, the largest "delta" is 1, with percent 0.000385, we can fill the NA as we indicated above, and then tidy the new non-missing data.
 
 ``` r
 # data for infant sex
@@ -423,16 +377,9 @@ infant_sex_nomiss_data =
   summarise(number = sum(num)) %>% 
   spread(key = infant_sex, value = number) %>% 
   knitr::kable(digits = 3)
-
-infant_sex_data = 
-  birth_data_un %>% 
-  select(year, cd, cd_name, borough, birthtot, sex1tot:sex2tot) %>%
-  gather(infant_sex, num, sex1tot:sex2tot) %>% 
-  group_by(year, borough, infant_sex) %>% 
-  summarise(number = sum(num)) %>% 
-  spread(key = infant_sex, value = number) %>% 
-  knitr::kable(digits = 3)
 ```
+
+For the infant sex data, there is no missing value, which is perfect!
 
 ``` r
 # data for infant birthweight
@@ -474,18 +421,13 @@ birth_weight_nomiss_data =
   summarise(number = sum(num)) %>% 
   spread(key = birth_weight, value = number) %>% 
   knitr::kable(digits = 3)
-
-birth_weight_data =  
-  birth_data_un %>% 
-  select(year, cd, cd_name, borough, birthtot, bwt1tot:bwt9tot) %>%
-  gather(birth_weight, num, bwt1tot:bwt9tot) %>% 
-  group_by(year, borough, birth_weight) %>% 
-  summarise(number = sum(num)) %>% 
-  spread(key = birth_weight, value = number) %>% 
-  knitr::kable(digits = 3)
 ```
 
-**Crossed Variables** infant birthweight and maternal age, infant sex and maternal nativity, maternal nativity and maternal age, gestational and maternal age, infant sex and maternal age
+For the data for infant birthweight, the largest "delta" is 10, with percent 0.0229, we can fill the NA as we indicated above, and then tidy the new non-missing data.
+
+**Crossed Variables**
+
+infant birthweight and maternal age, infant sex and maternal nativity, maternal nativity and maternal age, gestational and maternal age, infant sex and maternal age
 
 ``` r
 # data for infant birthweight and maternal age
@@ -529,17 +471,9 @@ bwt_age_nomiss_data =
   summarise(number = sum(num)) %>% 
   spread(key = bwt_age, value = number) %>% 
   knitr::kable(digits = 3)
-
-bwt_age_data =  
-  birth_data_un %>%
-  select(year, cd, cd_name, borough, birthtot, contains("ctot_a")) %>%
-  select(year, cd, cd_name, borough, birthtot, starts_with("bwt")) %>% 
-  gather(bwt_age, num, bwt1ctot_a1:bwt2ctot_a4) %>% 
-  group_by(year, borough, bwt_age) %>% 
-  summarise(number = sum(num)) %>% 
-  spread(key = bwt_age, value = number) %>% 
-  knitr::kable(digits = 3)
 ```
+
+For the data for infant birthweight and maternal age, the largest "delta" is 11, with percent 0.0252, we can fill the NA as we indicated above, and then tidy the new non-missing data.
 
 ``` r
 # data for infant sex and maternal nativity
@@ -583,18 +517,9 @@ sex_nat_nomiss_data =
   summarise(number = sum(num)) %>% 
   spread(key = sex_nat, value = number) %>% 
   knitr::kable(digits = 3)
-
-
-sex_nat_data =  
-  birth_data_un %>%
-  select(year, cd, cd_name, borough, birthtot, contains("tot_n")) %>%
-  select(year, cd, cd_name, borough, birthtot, starts_with("sex")) %>% 
-  gather(sex_nat, num, sex1tot_n1:sex2tot_n2) %>% 
-  group_by(year, borough, sex_nat) %>% 
-  summarise(number = sum(num)) %>% 
-  spread(key = sex_nat, value = number) %>% 
-  knitr::kable(digits = 3)
 ```
+
+For the data for infant sex and maternal nativity, the largest "delta" is 44, with percent 0.0229, we can fill the NA as we indicated above, and then tidy the new non-missing data.
 
 ``` r
 # data for maternal nativity and maternal age
@@ -636,16 +561,9 @@ birth_nat_age_nomiss_data =
   summarise(number = sum(num)) %>% 
   spread(key = nativity_age, value = number) %>% 
   knitr::kable(digits = 3)
-
-birth_nat_age = 
-  birth_data_un %>% 
-  select(year, cd, cd_name, borough, birthtot, nat1tot_a1, nat2tot_a1, nat1tot_a2, nat2tot_a2, nat1tot_a3, nat2tot_a3, nat1tot_a4, nat2tot_a4) %>% 
-  gather(key = nativity_age, value = num, nat1tot_a1:nat2tot_a4) %>% 
-  group_by(year, borough, nativity_age) %>% 
-  summarise(number = sum(num)) %>% 
-  spread(key = nativity_age, value = number) %>% 
-  knitr::kable(digits = 3)
 ```
+
+For the data for infant sex and maternal nativity, the largest "delta" is 21, with percent 0.0249, we can fill the NA as we indicated above, and then tidy the new non-missing data.
 
 ``` r
 # data for infant sex and maternal age
@@ -687,13 +605,6 @@ birth_sex_age_nomiss_data =
   summarise(number = sum(num)) %>% 
   spread(key = sex_age, value = number) %>% 
   knitr::kable(digits = 3)
-
-birth_sex_age = 
-  birth_data_un %>% 
-  select(year, cd, cd_name, borough, birthtot, sex1tot_a1, sex2tot_a1, sex1tot_a2, sex2tot_a2, sex1tot_a3, sex2tot_a3, sex1tot_a4, sex2tot_a4) %>% 
-  gather(key = sex_age, value = num, sex1tot_a1:sex2tot_a4) %>% 
-  group_by(year, borough, sex_age) %>% 
-  summarise(number = sum(num)) %>% 
-  spread(key = sex_age, value = number) %>% 
-  knitr::kable(digits = 3)
 ```
+
+For the data for infant sex and maternal nativity, the largest "delta" is 7, with percent 0.0121, we can fill the NA as we indicated above, and then tidy the new non-missing data.
