@@ -168,7 +168,7 @@ for our futher analysis.
 Visualizations, summaries, and exploratory statistical analyses. Justify the steps you took, and show any major changes to your ideas.
 
 
-##### Fill the missing value and tidy
+##### Fill the missing value and tidy separately
 
 As we indicated above, we select the variables according to the missing value proportion and interest. For the variables we selected, we also need to deal with the missing value.
 
