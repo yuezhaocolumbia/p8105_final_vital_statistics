@@ -196,7 +196,7 @@ race_death_data = race_death_data %>%
 
 # aggregate cd-wise number into borough-wise
 race_death_data2 = race_death_data %>%
-  group_by(borough, year, race, as.factor(cause_of_death) )%>%
+  group_by(borough, year, race, cause_of_death )%>%
   summarise(borough_race_death = sum(number, na.rm = TRUE))
 ```
 
@@ -230,8 +230,8 @@ replace_cd = function(df){
 }
 
 total_death_data = replace_cd(total_death_data)
-gender_death_data =replace_cd(gender_death_data)
 gender_death_data2 = replace_cd(gender_death_data2)
+race_death_data2 = replace_cd(race_death_data2)
 
 ```
 
@@ -510,17 +510,110 @@ theme(
    theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
    labs(x = "Cause of death", 
          y = "Number of death", 
-         title = "leading cause of death for male")
-  
+         title = "leading cause of death for male") 
 
 ggarrange(male1, female1, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
 ```
 
 #### by. race
 ```{r}
-race_death_cause = race_death_data %>%
-  group_by(borough, gender, year) %>%
-  top_n(n = 10, wt = number_cs_boro_gdr) %>%
-  arrange(year, borough, gender, desc(number_cs_boro_gdr))
+
+race_death_data2 = race_death_data2 %>%
+  ungroup() %>%
+  mutate(race = case_when(
+    race == 1 ~ "Hispanic",
+    race == 3 ~ "Asian Non-Hispanic",
+    race == 4 ~ "White Non-Hispanic",
+    race == 5 ~ "Black Non-hispanic"
+  )) 
+
+# identify the top leading cause in NYC
+race_death_cause  = race_death_data2%>%
+  group_by(race, cause_of_death) %>%
+  summarise(cs_death_race = sum(borough_race_death)/11)  %>% # average yearly death from 2004 to 2014
+  top_n(n = 10, wt = cs_death_race) %>%
+  arrange(race, desc(cs_death_race)) 
+
+## plot for hispanic
+hispanic = race_death_cause %>% 
+  filter(race == "Hispanic") %>%
+  ggplot(aes(x = reorder(cause_of_death, cs_death_race), y = cs_death_race)) +
+  geom_bar(stat = "identity", fill = "antiquewhite") +
+
+  labs(x = "Cause of death", 
+         y = "Number of death", 
+         title = "leading cause of death for Hispanic") + 
+theme(
+  panel.background = element_rect(fill = "white",
+                                colour = "white",
+                                size = 0.5, linetype = "solid"),
+  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey"), 
+  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey")
+  ) +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6))
+
+# asian
+asian = race_death_cause %>% 
+  filter(race == "Asian Non-Hispanic") %>%
+  ggplot(aes(x = reorder(cause_of_death, cs_death_race), y = cs_death_race)) +
+  geom_bar(stat = "identity", fill = "aquamarine1" ) +
+  
+theme(
+  panel.background = element_rect(fill = "white",
+                                colour = "white",
+                                size = 0.5, linetype = "solid"),
+  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey"), 
+  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey")
+  ) +
+   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
+   labs(x = "Cause of death", 
+         y = "Number of death", 
+         title = "leading cause of death for Asian Non-hispanic")
+  
+  # white
+white = 
+  race_death_cause %>%
+  filter(race == "White Non-Hispanic") %>%
+  ggplot(aes(x = reorder(cause_of_death, cs_death_race) , y = cs_death_race)) +
+  geom_bar(stat = "identity" , fill = "chartreuse2") + 
+    theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
+   labs(x = "Cause of death", 
+         y = "Number of death", 
+         title = "leading cause of death for white")  +
+theme(
+  panel.background = element_rect(fill = "white",
+                                colour = "white",
+                                size = 0.5, linetype = "solid"),
+  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey"), 
+  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey")
+  ) 
+
+# black
+black = 
+  race_death_cause %>%
+  filter(race == "Black Non-hispanic") %>%
+  ggplot(aes(x = reorder(cause_of_death, cs_death_race) , y = cs_death_race)) +
+  geom_bar(stat = "identity", fill = "cyan2") + 
+    theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
+   labs(x = "Cause of death", 
+         y = "Number of death", 
+         title = "leading cause of death for the black") +
+theme(
+  panel.background = element_rect(fill = "white",
+                                colour = "white",
+                                size = 0.5, linetype = "solid"),
+  panel.grid.major = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey"), 
+  panel.grid.minor = element_line(size = 0.15, linetype = 'solid',
+                                colour = "grey")
+  ) 
+
+ggarrange(hispanic, asian, white, black, ncol=2, nrow=2, common.legend = TRUE, legend="bottom")
 ```
 
