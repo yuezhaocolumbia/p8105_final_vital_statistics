@@ -2,9 +2,11 @@
 title: "Yx2510 data tidy"
 author: "Yi Xiao"
 date: "25/11/2018"
-output: github_document
+output: html_document
 ---
 ```{r, message = FALSE}
+
+
 library(haven)
 library(dplyr)
 library(tidyverse)
@@ -15,8 +17,7 @@ library(rgeos)
 library(maptools)
 library(geojsonio)
 library(viridis)
-library(plotly)
-library(ggpubr)
+
 
 ```
 
@@ -26,42 +27,28 @@ library(ggpubr)
 name = list.files(path = "./data", full.names = TRUE, pattern = "*.sas7bdat") 
 cd_data =  map_df(name, read_sas)  %>%
   janitor::clean_names()
-year = as.data.frame(rep(2000:2014, each = 59)) 
+year = as.data.frame(rep(2004:2014, each = 59)) 
 
 # add a column "year"
 cd_data = cbind(year, cd_data) 
 colnames(cd_data)[1] = "year"
 
-community_district = unique(cd_data$community_district)
-cd_number = c(101:112, 201:212, 301: 318, 401:414, 501:503)
-community_district = as.tibble(cbind(community_district, cd_number))
-
-cd_data = merge(cd_data, community_district , by = "community_district")
-
-
-
 # import population data
-cd_number2 = c(201:212, 301: 318, 101:112, 401:414, 501:503)
-pop_data2 = read_csv("./data/New_York_City_Population_By_Community_Districts 16.09.03.csv") %>%
- janitor::clean_names() 
-pop_data2 = cbind(cd_number2, pop_data2) %>%
-  select(borough, cd_number2, cd_name, x2000_population, x2010_population) %>%
-  rename("cd_number" = "cd_number2")
-  # standardize the cd_number
-
-  
-
-
+pop_data2 = read_csv("./data/New_York_City_Population_By_Community_Districts2.csv") %>%
+ janitor::clean_names() %>%
+  select(borough, cd_number, cd_name, x2000_population, x2010_population)
   
 # merge the two datasets
-my_data = merge(pop_data2, cd_data, by = "cd_number") 
+my_data = merge(pop_data2, cd_data, by.x = "cd_name", by.y = "community_district") %>%
+  arrange(cd_name, borough, year) 
  
 my_tidy_data = my_data %>% # we'll use 2000 year population data for 2000 - 2009, and 2010 year data for 2010 -2014 
   mutate(population = ifelse(year < 2010, my_data$x2000_population, my_data$x2010_population)) %>%
   select(-c(x2000_population, x2010_population)) %>% 
   mutate(cd_name = as.factor(cd_name)
          ) %>%
-  select(c(cd_number:cd_name, year:population))
+  select(c(cd_name:year, x1:population))
+
 ```
 
 The generated dataset consists of `r nrow(my_tidy_data)` observations  and `r ncol(my_tidy_data)` columns. Each observation records information on population and death statistics in one of `r n_distinct(my_tidy_data$cd_name)` community districts in New York City. Variables in the original dataset include sex, age, ethnicity and cause of death and their cross variable with each other. Since we are interested in cause of death in this project, we only kept cause of death and its cross information with other demographic variables. Noteworthily, the presence of a large proportion of NAs could be an issue in later steps.
@@ -98,69 +85,59 @@ Race/ethnicity is denoted with 1 to 5, standing for:
 
 
 # 2. tidy the data
-
-#### 2.0 dealing with the missing value
-
-```{r}
-missing_value = 
-  my_tidy_data %>% 
-  summarise_all(funs(sum(is.na(.)))) %>% 
-  gather(term, num_na, everything()) %>% 
-  mutate(percent = num_na/nrow(my_tidy_data)) %>% 
-  filter(percent > 0.2) 
-
-
-```
-We filtered those variables with more than 20% of missing value and found `nrow(missing_value)` fell into this category. However, it is quite reasonable that no people from a certain age or gender group died of a certain disease in a specific year and neighbourhood and thus resulted in absence of recording. Missing data could suggest 0 death and removing them will lead to loss of valuable information. Therefore, we kept those missing value in our dataset.
-
 #### 2.1 dataset without demographic characteristics
 ```{r split our dataset into several subsets}
 # we are first dealing with death infomation without accounting for other demographic characteristics
 total_death_data = my_tidy_data %>%
-  select(cd_number:year, x1: x22, population, total) %>%
-  gather(key = "cause_of_death", value = number, x1:x22) 
+  select(cd_name: x22, population) %>%
+  gather(key = "cause_of_death", value = number, x1:x22)
 
-
+   
 ```
 
 ## 2.2 cause of death crossed with gender
 ```{r}
 # cause of death crossed with gender
 gender_death_data = my_tidy_data %>%
-   select(cd_number : year, c1male :c22female) %>%
+   select(borough : year, c1male :c22female) %>%
    gather (key = "cause_of_death", value = "number", c1male : c22female)   
 
-# split "death cause/gender" into gender
-  gender_death_data = gender_death_data %>% 
+  gender_death_data = gender_death_data %>%
    mutate(gender = ifelse(str_detect(gender_death_data$cause_of_death, "female"), "female", "male"))
 
-  #split "death cause/gender" into cause of death
 gender_death_data =gender_death_data %>%
  mutate(cause_of_death = 
        substr(gender_death_data$cause_of_death,1,str_locate(gender_death_data$cause_of_death, "[0-9][a-zA-Z]")[,1])
  )  
 
-# aggregate cd-level data into borough-level
 gender_death_data2 = gender_death_data %>%
   group_by(borough, year, gender, cause_of_death) %>%
   summarise(number_cs_boro_gdr = sum(number, na.rm = TRUE))
   
 
 
+# sub-group population data - by gender
+nyc_demo_gender = my_data %>%
+  select(cd_number, borough, male, female, year) %>%
+  gather(key = "gender", value = "population_by_gender", male:female) %>%
+  group_by(borough, gender, year) %>%
+  summarise(borough_population_gender = sum(population_by_gender, na.rm =TRUE))
+
+  
+
+gender_death_data2 = merge(gender_death_data2, nyc_demo_gender, by = c("gender", "borough", "year")) 
+
+
   
 ```
-
 
 
 ## 2.3 dataset crossed with age
 ```{r}
 # cause of death crossed with age 
-# gather the age and death info 
-age_death_data = my_tidy_data %>% 
-select(cd_number: year, c1age_1_12months:c22age_85) %>%
+age_death_data = my_tidy_data %>%
+select(cd_name: year, c1age_1_12months:c22age_85) %>%
   gather (key = "cause_of_death", value = "number", c1age_1_12months : c22age_85) 
-
-# split the comb variable into age and cause of death
 age_death_data = age_death_data %>% 
   mutate(
     age_group = 
@@ -168,24 +145,30 @@ age_death_data = age_death_data %>%
     ) %>%
   mutate(cause_of_death =  
            substr(age_death_data$cause_of_death, 0, (str_locate(age_death_data$cause_of_death, "age")[,1] -1)))  
-
+age_death_data = age_death_data 
 
 # aggregate cd-wise number into borough-wise
-age_death_data2 = age_death_data %>%
+age_death_data = age_death_data %>%
   group_by(borough, year, age_group, cause_of_death) %>%
   summarise(borough_age_death = sum(number, na.rm = TRUE))
 
-# aggregate age groups
-age_death_data3 = age_death_data2 %>%
-  ungroup %>%
-  mutate(age_group = case_when(
-    !(age_group  %in% c("1_12months", "28days", "65_69", "70_74", "75_79", "80_84", "85")) ~ "Premature Death",
-    age_group %in% c("65_69", "70_74", "75_79", "80_84", "85") ~ ">65 age death",
-    age_group == "28days" ~ "new born death",
-    age_group == "1_12months" ~ "1_12months death"
-  ) )
+# sub-group population data - by age
+nyc_demo_age = my_data %>%
+  select(cd_number, borough, age_28days : age_85, year) %>%
+  gather(key = "age_group", value = "population_by_age", age_28days: age_85) 
 
+nyc_demo_age = nyc_demo_age %>%
+   mutate(
+    age_group = 
+      substr(nyc_demo_age$age_group, str_locate(nyc_demo_age$age_group, "age")[,1] + 4, nchar(nyc_demo_age$age_group))
+    ) %>%
+  mutate(age_group =  as.factor(age_group)) %>%
+  group_by(borough, age_group, year) %>%
+  summarise(borough_age_population = sum(population_by_age, na.rm =TRUE)) 
 
+# merge
+age_death_data2 = merge(age_death_data, nyc_demo_age, by = c("borough", "age_group" , "year"))
+  
 ```
 
 
@@ -194,7 +177,7 @@ age_death_data3 = age_death_data2 %>%
 
 # cause of death crossed with race 
 race_death_data = my_tidy_data %>%
-   select(cd_number:year, c11:c225) %>%
+   select(cd_name: year, c11:c225) %>%
      gather (key = "cause_of_death", value = "number", c11:c225) 
 
 race_death_data = race_death_data %>%
@@ -205,46 +188,63 @@ race_death_data = race_death_data %>%
                   ) 
 
 # aggregate cd-wise number into borough-wise
-race_death_data2 = race_death_data %>%
-  group_by(borough, year, race, cause_of_death )%>%
+race_death_data = race_death_data %>%
+  group_by(borough, year, race, as.factor(cause_of_death) )%>%
   summarise(borough_race_death = sum(number, na.rm = TRUE))
+
+# sub-group population data - by race
+nyc_demo_race = my_data %>%
+  select(cd_number, borough, hispanic :black_non_hispanic, year) %>%
+  rename("1" = "hispanic", "3" = "asian_non_hispanic", "4"= "white_non_hispanic", "5" = "black_non_hispanic") %>%
+  gather(key = "race", value = "population_by_race", `1` : `5`)  %>%
+  group_by(borough, race, year) %>%
+  summarise(borough_race_population = sum(population_by_race, na.rm =TRUE)) 
+
+# merge
+race_death_data2 = merge(race_death_data, nyc_demo_race, by = c("borough", "race", "year"))
+
+
 ```
 
 Now I added specific cause of death to the dataset.
 ```{r}
 replace_cd = function(df){ 
  
-  df$cause_of_death[df$cause_of_death == "x1" | df$cause_of_death == "c1"] = "septicemia" 
-  df$cause_of_death[df$cause_of_death == "x2" | df$cause_of_death == "c2"] = "HIV"
-  df$cause_of_death[df$cause_of_death == "x3" | df$cause_of_death == "c3"] = "malignant neoplasms (cancer)"
-  df$cause_of_death[df$cause_of_death == "x4" | df$cause_of_death == "c4"] = "cancer of the colon, rectum, and anus"
-  df$cause_of_death[df$cause_of_death == "x5" | df$cause_of_death == "c5"] = "cancer of the pancreas"
-  df$cause_of_death[df$cause_of_death == "x6" | df$cause_of_death == "c6"] = "trachea, bronchus, and lung"
-  df$cause_of_death[df$cause_of_death == "x7" | df$cause_of_death == "c7"] = "cancer of the breast (female)"
-  df$cause_of_death[df$cause_of_death == "x8" | df$cause_of_death == "c8"] = "cancer of the prostate"
-  df$cause_of_death[df$cause_of_death == "x9" | df$cause_of_death == "c9"] = " diabetes mellitus"
-  df$cause_of_death[df$cause_of_death == "x10" | df$cause_of_death == "c10"] = "psychoactive substance"
-  df$cause_of_death[df$cause_of_death == "x11"  | df$cause_of_death == "c11"] = "Alzheimer's disease"
-  df$cause_of_death[df$cause_of_death == "x12" | df$cause_of_death == "c12"] = " diseases of the heart"
-  df$cause_of_death[df$cause_of_death == "x13" | df$cause_of_death == "c13"] = "hypertension/hypertensive renal disease"
-  df$cause_of_death[df$cause_of_death == "x14" | df$cause_of_death == "c14"] = "cerebrovascular diseases"
-  df$cause_of_death[df$cause_of_death == "x15" | df$cause_of_death == "c15"] = "influenza and pneumonia"
-  df$cause_of_death[df$cause_of_death == "x16" | df$cause_of_death == "c16"] = "chronic lower respiratory diseases"
-  df$cause_of_death[df$cause_of_death == "x17" | df$cause_of_death == "c17"] = "chronic liver disease and cirrhosis"
-  df$cause_of_death[df$cause_of_death == "x18" | df$cause_of_death == "c18"] = "Nephritis, Nephrotic Syndrome and Nephrosis"
-  df$cause_of_death[df$cause_of_death == "x19" | df$cause_of_death == "c19"] = "accident except drug poisoning"
-  df$cause_of_death[df$cause_of_death == "x20" | df$cause_of_death == "c20"] = "intentional self‐harm (suicide)"
-  df$cause_of_death[df$cause_of_death == "x21" | df$cause_of_death == "c21"] = "assault (homicide)"
-  df$cause_of_death[df$cause_of_death == "x22" | df$cause_of_death == "c22"] = "others"
-  df
+  df$cause_of_death[df$cause_of_death == "x1"] = "septicemia" 
+  df$cause_of_death[df$cause_of_death == "x2"] = "HIV"
+  df$cause_of_death[df$cause_of_death == "x3"] = "malignant neoplasms (cancer)"
+  df$cause_of_death[df$cause_of_death == "x4"] = "cancer of the colon, rectum, and anus"
+  df$cause_of_death[df$cause_of_death == "x5"] = "cancer of the pancreas"
+  df$cause_of_death[df$cause_of_death == "x6"] = "trachea, bronchus, and lung"
+  df$cause_of_death[df$cause_of_death == "x7"] = "cancer of the breast (female)"
+  df$cause_of_death[df$cause_of_death == "x8"] = "cancer of the prostate"
+  df$cause_of_death[df$cause_of_death == "x9"] = " diabetes mellitus"
+  df$cause_of_death[df$cause_of_death == "x10"] = "psychoactive substance"
+  df$cause_of_death[df$cause_of_death == "x11"] = "Alzheimer's disease"
+  df$cause_of_death[df$cause_of_death == "x12"] = " diseases of the heart"
+  df$cause_of_death[df$cause_of_death == "x13"] = "hypertension/hypertensive renal disease"
+  df$cause_of_death[df$cause_of_death == "x14"] = "cerebrovascular diseases"
+  df$cause_of_death[df$cause_of_death == "x15"] = "influenza and pneumonia"
+  df$cause_of_death[df$cause_of_death == "x16"] = "chronic lower respiratory diseases"
+  df$cause_of_death[df$cause_of_death == "x17"] = "chronic liver disease and cirrhosis"
+  df$cause_of_death[df$cause_of_death == "x18"] = "Nephritis, Nephrotic Syndrome and Nephrosis"
+  df$cause_of_death[df$cause_of_death == "x19"] = "accident except drug poisoning"
+  df$cause_of_death[df$cause_of_death == "x20"] = "intentional self‐harm (suicide)"
+  df$cause_of_death[df$cause_of_death == "x21"] = "assault (homicide)"
+  df$cause_of_death[df$cause_of_death == "x22"] = "others"
 }
 
+<<<<<<< HEAD
+##total_death_data = replace_cd(total_death_data)
+##race_death_data2 = replace_cd(race_death_data2)
+=======
 total_death_data = replace_cd(total_death_data)
 gender_death_data2 = replace_cd(gender_death_data2)
 race_death_data2 = replace_cd(race_death_data2)
 age_death_data2 = replace_cd(age_death_data2)
 age_death_data3 = replace_cd(age_death_data3)
 
+>>>>>>> f807cb9bafabb0ae0b71033a722acedc01eb02b9
 ```
 
 # 3. data viasualization 
@@ -253,8 +253,8 @@ age_death_data3 = replace_cd(age_death_data3)
 
 
 ```{r crude mortality rate}
-# 14-year average crude mortality rate in each community district in New York City
-cd_death_rate  = total_death_data %>%
+# 10-year average crude mortality rate in each community district in New York City
+cd_death_rate = total_death_data %>%
   group_by(borough, cd_name, year) %>%
   summarise(total_cd_death = sum(number, na.rm = TRUE), population = mean(population), cd_number = mean(as.numeric(cd_number))) %>%
   mutate(motality_rate = total_cd_death/population) %>%
@@ -269,9 +269,26 @@ cd_death_rate %>%
    labs(title = "10-year average crude mortality rate in each community district in New York City",
              x = "Community District",
              y = "Average Motality Rate") +
-        theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-  viridis::scale_fill_viridis(discrete = TRUE) 
+        theme(axis.text.x = element_text(angle=90, vjust=0.6))
+   
+  
 
+
+# 10-year average crude mortality rate in each borough in New York City
+borough_death_rate = total_death_data %>%
+  group_by(borough, year) %>%
+  summarise(total_borough_death = sum(number, na.rm = TRUE), population = sum(population)/22) %>%
+  mutate(motality_rate = total_borough_death/population) %>%
+  group_by(borough) %>%
+  summarise(average_death_rate = mean(motality_rate))
+
+borough_death_rate %>%
+   ggplot(aes(x = borough, y = average_death_rate)) +
+   geom_bar(stat = "identity",width = .75, fill="tomato2") +
+   labs(title = "10-year average crude mortality rate in each borough in New York City",
+             x = "Borough",
+             y = "Average Motality Rate") +
+        theme(axis.text.x = element_text(angle=90, vjust=0.6))
   
 ```
 
@@ -282,14 +299,14 @@ fil <- "nyc_community_districts.geojson"
 if (!file.exists(fil)) download.file(URL, fil)
 
 nyc_districts = geojson_read(fil, what="sp")
+# nyc_districts@data =  merge(nyc_districts@data, cd_death_rate, by.x = "BoroCD", by.y = "cd_number")
 
-
-nyc_districts_map = fortify(nyc_districts, region="BoroCD") # add border line 
+nyc_districts_map = fortify(nyc_districts, region="BoroCD")
 
 mids = cbind.data.frame(as.data.frame(gCentroid(nyc_districts, byid=TRUE)), 
                          id=nyc_districts$BoroCD)
 
-ny_map = ggplot() %>% +  # draw NYC map
+ny_map = ggplot() %>% + 
          geom_map(data=nyc_districts_map, map=nyc_districts_map,
                     aes(x=long, y=lat, map_id=id),
                     color="#2b2b2b", size=0.15, fill=NA) + 
@@ -298,13 +315,12 @@ ny_map = ggplot() %>% +  # draw NYC map
         ggthemes::theme_map()
 
 
-par(mfrow = c(2,1))
  nyc_districts@data =  merge(nyc_districts@data, cd_death_rate, by.x = "BoroCD", by.y = "cd_number")
 
-choro = data.frame(district=nyc_districts@data$BoroCD,  
+choro = data.frame(district=nyc_districts@data$BoroCD,
                     average_death_rate=nyc_districts@data$average_death_rate)
 
-cd_death_map = nyc_districts_map %>% # add color to map 
+cd_death_map = nyc_districts_map %>%
 ggplot()+
 geom_map(map=nyc_districts_map,
                     aes(x=long, y=lat, map_id=id),
@@ -316,10 +332,9 @@ scale_fill_viridis(name="Average death rate") +
 coord_map() +
 ggthemes::theme_map() +
 theme(legend.position=c(0.1,0.5)) +
-   labs(title = "average crude mortality rate in each community district in New York City from 2000 to 2014"
+   labs(title = "average crude mortality rate in each community district in New York City from 2004 to 2014"
             )
 cd_death_map
-
 
 ```
 
@@ -338,25 +353,37 @@ specific_death_rate %>%
   ggplot(aes(x = reorder(cause_of_death, mean_cs_death_rate), y = mean_cs_death_rate)) +
   geom_bar(aes(fill = cause_of_death), stat = "identity") +
   facet_grid(. ~ borough)  +
-   labs(title = "14-year average cause-specific crude mortality rate in each borough",
+   labs(title = "10-year average cause-specific crude mortality rate in each borough",
              x = "Cause of Death",
              y = "Cause-specific Mortality Rate",
               caption = "Source: vital statistics database: 2004-2014") +
         theme(axis.text.x = element_text(angle=90, size = 8, vjust=0.6)) +
         theme(legend.position="bottom", 
               legend.key.size = unit(.1, "in")) +
-    coord_flip()  +
-  viridis::scale_fill_viridis(discrete = TRUE)
+    coord_flip()
   
+  
+  
+  
+leading_cd_data = specific_death_rate %>%
+  group_by(borough) %>%
+  top_n(n = 10, wt = mean_cs_death_rate) %>%
+  mutate(cause_of_death = as.factor(cause_of_death)) 
+
+# 不知道为啥出现两列unexpected column
+leading_cd_data %>%
+  ggplot(aes(x = reorder(cause_of_death, mean_cs_death_rate), y = mean_cs_death_rate)) +
+  geom_bar(stat = "identity") +
+  facet_grid(.~ borough) +
+  theme(axis.text.x = element_text(angle=90, vjust=0.6))
   
 ```
 
 #### 3.2 Death data analysis by year
-##### 3.2.1 motality rate in New York City from 2000 to 2014
+##### 3.2.1 motality rate in New York City from 2004 to 2014
 
 ```{r}
-
-# annual mortality rate in New York City from 2000 to 2010
+# annual mortality rate in New York City from 2004 to 2010
 year_death_rate = total_death_data %>%
   group_by(borough, year) %>%
   summarise(total_borough_death = sum(number, na.rm = TRUE), population = sum(population)/22) %>%
@@ -365,13 +392,7 @@ year_death_rate = total_death_data %>%
 
 year_death_rate %>%
   ggplot(aes(x = year, y = motality_rate, group = borough, color = borough)) +
-  geom_line() + 
-  geom_point() +
-  labs(x = "Year", 
-         y = "Crude motality rate", 
-         title = "Crude motality rate in New York City across time") + 
-  viridis::scale_color_viridis(discrete = TRUE)
-
+  geom_line() + geom_point()
 
 ```
 
@@ -382,62 +403,19 @@ year_cs_death_ny = total_death_data %>%
   group_by(year, cause_of_death) %>%
   summarise(specific_death_number = sum(number, na.rm = TRUE), total_population = sum(population)) %>%
   mutate(motality_rate = specific_death_number/total_population) %>%
-filter(year %in% c("2000", "2006", "2012", "2014")) %>%
+filter(year %in% c("2004", "2008", "2012", "2014")) %>%
   group_by(year) %>%
   top_n(n = 10, wt = motality_rate) 
   
-lead_cause = merge(year_cs_death_ny, total_death_data) %>% 
-  group_by(year, cause_of_death) %>%
-  summarise(specific_death_number = sum(number, na.rm = TRUE), total_population = sum(population)) %>%
-  mutate(motality_rate = specific_death_number/total_population)
-
-lead_cause %>%
-  filter(year == 2000) %>%
-  ggplot(aes(reorder(x = cause_of_death, motality_rate), y = motality_rate)) +
-  geom_bar(stat = "identity", fill = "lightblue") + 
-  theme_bw() +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-   labs(x = "Cause of death", 
-         y = "Crude mortality rate", 
-         title = "leading cause of death in 2000") +
-  coord_flip()
-
-lead_cause %>%
-  filter(year == 2006) %>%
-  ggplot(aes(reorder(x = cause_of_death, motality_rate), y = motality_rate)) +
-  geom_bar(stat = "identity", fill = "deeppink1") + 
-  theme_bw() +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-   labs(x = "Cause of death", 
-         y = "Crude mortality rate", 
-         title = "leading cause of death in 2006") +
-  coord_flip()
-
- lead_cause %>%
-  filter(year == 2012) %>%
-  ggplot(aes(reorder(x = cause_of_death, motality_rate), y = motality_rate)) +
-  geom_bar(stat = "identity", fill = "darkolivegreen1") + 
-  theme_bw() +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-   labs(x = "Cause of death", 
-         y = "Crude mortality rate", 
-         title = "leading cause of death in 2000") +
-  coord_flip()
-
- lead_cause %>%
-  filter(year == 2014) %>%
-  ggplot(aes(reorder(x = cause_of_death, motality_rate), y = motality_rate)) +
-  geom_bar(stat = "identity", fill = "red") + 
-  theme_bw() +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-   labs(x = "Cause of death", 
-         y = "Crude mortality rate", 
-         title = "leading cause of death in 2014") +
-  coord_flip()
-   
+year_cs_death_ny %>%
+  arrange(year, desc(motality_rate)) %>%
+  knitr::kable()
   
 ```
 
+<<<<<<< HEAD
+
+=======
 ### by year and borough 
 ```{r}
 # identify the top ten death by borough
@@ -839,4 +817,5 @@ ggarrange(over_65_2, premature2, ncol=2, nrow=1, common.legend = TRUE, legend="b
   #viridis::scale_color_viridis(discrete = TRUE) +
    #theme(axis.text.x = element_text(angle=90, vjust=0.6))
 ```
+>>>>>>> f807cb9bafabb0ae0b71033a722acedc01eb02b9
 
