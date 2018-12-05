@@ -11,7 +11,8 @@ Understanding the pattern of birth and death is of critical importance in identi
 
 We analysis the birth and death part respectively, and this is for the birth part.
 
-#### Motivation
+1.Motivation
+------------
 
 Provide an overview of the project goals and motivation.
 
@@ -25,7 +26,8 @@ We aim to analysis the following issues in the city of New York by boroughs from
 
 For the birth data, we would like to know the birth rate in New York by race, place of origin and borough and we would also plot the time trend of birth rate over the last ten years. Birth defect is also one of our interests. By exploring the dataset, we'd like to know whether a certain kind of birth defect is linked with certain maternal characteristics.
 
-#### Related work
+2.Related work
+--------------
 
 Anything that inspired you, such as a paper, a web site, or something we discussed in class.
 
@@ -35,7 +37,8 @@ From these website, we successful got the data we want about the death and birth
 
 Moreover, from the computing club, we were introducted to create maps in ggplot, which is really cool. Combining with what we have learned about visualization and exploratory analysis in class, we are inspired to create some well-looled plot about the birth and death related stuff in the city of New York.
 
-#### Initial questions
+3.Initial questions
+-------------------
 
 What questions are you trying to answer? How did these questions evolve over the course of the project? What new questions did you consider in the course of your analysis?
 
@@ -59,7 +62,8 @@ Moreover, the real data always contain a lot of missing value, so we have anothe
 
 -   How to deal with the missing value rationally?
 
-#### Data
+4.Data
+------
 
 Source, scraping method, cleaning, etc.
 
@@ -69,7 +73,7 @@ Datasets that will be used in this project are, but not limited to, the birth mi
 
 Comparing with the three different aggregated dataset: Community District micro-datasets (single year aggregate counts), Zip Code micro-datasets (aggregated 3 year counts) and Census Tract datasets (aggregated 5 year counts), we choose to use Community District micro-datasets (single year aggregate counts), since this dataset only aggregate for single years, and we can better analysis the trend of birth characteristics by years.
 
-##### Load and clean the data from community\_district source
+### 4.1 Load and clean the data from community\_district source
 
 ``` r
 # load and import community_district dataset
@@ -119,7 +123,7 @@ The community\_district dataset contains 885 rows x 364 columns, which means tha
 
 Since the dataset is really large, we decide to analysis the data with each vairables (containing with several categories) respectively.
 
-##### Deal with missing value
+### 4.2 Deal with missing value
 
 After loading and cleaning the dataset, we find out that there are a lot of missing values in the dataset. We first checking the number and proportion of the missing values in each column
 
@@ -142,11 +146,12 @@ Accoring to the missing value proportion and our interests, using the cutoff = 2
 
 for our futher analysis.
 
-#### Exploratory analysis
+5. Exploratory analysis
+-----------------------
 
 Visualizations, summaries, and exploratory statistical analyses. Justify the steps you took, and show any major changes to your ideas.
 
-##### Fill the missing value and tidy separately
+### 5.1 Fill the missing value and tidy separately
 
 As we indicated above, we select the variables according to the missing value proportion and interest. For the variables we selected, we also need to deal with the missing value.
 
@@ -154,9 +159,9 @@ We first calculate the "delta" and "percent", which indicating the differences a
 
 In this case, we fill the missing value with the same data from last year in the same community district, if there are NAs for continuous three year, we fill the NA with 0.
 
-**Individual Variables**
+#### 5.1.1 Individual Variables
 
-maternal age, maternal nativity, parity, maternal marital status, infant sex, infant birthweight
+**Maternal age**
 
 ``` r
 # data maternal age
@@ -211,6 +216,8 @@ For the data for maternal age, the largest "delta" is 9, with percent 0.0107, we
 
 Moreover, the original maternal age data contains nine categories, since the smaller age category contains only a little number of birth characteristics, we joint some group together.
 
+**Maternal nativity**
+
 ``` r
 # data for maternal nativity
 
@@ -254,6 +261,8 @@ ma_nat_plot_data =
 ```
 
 For the data for maternal nativity, the largest "delta" is 44, with percent 0.0229, we can fill the NA as we indicated above, and then tidy the new non-missing data.
+
+**Maternal marital status **
 
 ``` r
 # data for maternal marital status 
@@ -299,6 +308,8 @@ marry_plot_data =
 
 For the data for parity, the largest "delta" is 1, with percent 0.000385, we can fill the NA as we indicated above, and then tidy the new non-missing data.
 
+**Infant sex**
+
 ``` r
 # data for infant sex
 birth_data_un %>% 
@@ -342,9 +353,9 @@ infant_sex_plot_data =
 
 For the infant sex data, there is no missing value, which is perfect!
 
-**Crossed Variables**
+#### 5.1.2 Crossed Variables
 
-maternal nativity and maternal age
+**Maternal nativity and Maternal age**
 
 ``` r
 # data for maternal nativity * maternal age
@@ -395,3 +406,154 @@ birth_nat_age_plot_data =
 ```
 
 For the data for infant sex and maternal nativity, the largest "delta" is 21, with percent 0.0249, we can fill the NA as we indicated above, and then tidy the new non-missing data.
+
+### 5.2 Visualization
+
+#### 5.2.1 Individual Variables
+
+**Maternal Age**
+
+``` r
+# the birth trend in different maternal age in NYC
+maternal_age_plot_data %>%
+  group_by(year, new_age) %>% 
+  summarise(number = sum(number)) %>% 
+  mutate(percent = number/ sum(number)) %>% 
+  ggplot(aes(x = year, y = percent, color = new_age)) +
+  geom_point() +
+  geom_line() +
+  labs(title = "Birth trend in different maternal age group in NYC",
+      y = "Proportion of number of  birth",
+      x = "Year",
+      color = "Maternal Age") +
+  theme_bw() +
+  scale_x_continuous(breaks=seq(2000, 2014, 1)) +
+  viridis::scale_color_viridis(discrete = TRUE) +
+  theme(legend.position = "bottom", plot.title = element_text(hjust = 0.5))
+```
+
+<img src="birth_data_xy2397_files/figure-markdown_github/unnamed-chunk-8-1.png" width="90%" style="display: block; margin: auto;" />
+
+We can see that mothers seldom give birth when they are younger than 18. As time went by, the proportion of birth accounted by 30 - 39 maternal age group increased , while the proportion of birth accounted by 18 - 24 decreased. Mothers tend to give birth at a relatively older age. But when they reach 40 years old, the frequency of giving birth dropped.
+
+**Maternal Nativity**
+
+``` r
+# the birth trend in different maternal nativity in NYC for each boro
+ma_nat_plot_data %>%
+  group_by(year, borough) %>% 
+  mutate(percent = number/sum(number)) %>% 
+  ggplot(aes(x = year, y = percent, color = new_ma_nat)) +
+  geom_point() +
+  geom_line() +
+  facet_grid( ~ borough) +
+  labs(title = "Birth trend in different maternal nativity in NYC for each borough",
+      y = "Proportion of number of birth",
+      x = "Year",
+      color = "Maternal Nativity") +
+  theme_bw() +
+  scale_x_continuous(breaks=seq(2000, 2014, 5)) +
+  viridis::scale_color_viridis(discrete = TRUE) +
+  theme(legend.position = "bottom", plot.title = element_text(hjust = 0.5))
+```
+
+<img src="birth_data_xy2397_files/figure-markdown_github/unnamed-chunk-9-1.png" width="90%" style="display: block; margin: auto;" />
+
+According to the plot above, mothers in Bronx and Brooklyn have the same chance to be Foreign born or US Born. In Queens, about 70% mothers are Foreign born. Opposite from that, in Staten Island, only about 35% mothers are Foreign born. This may be because Queens has the largest proportion of immigrants in New York City.
+
+**Maternal Marital Status**
+
+``` r
+#the birth trend in different marry status in NYC for each boro
+marry_plot_data %>%
+  group_by(year, borough) %>% 
+  mutate(percent = number/sum(number)) %>% 
+  ggplot(aes(x = year, y = percent, color = new_marry_status)) +
+  geom_line() +
+  geom_point() +
+  facet_grid( ~ borough) +
+  labs(title = "Birth trend in different maternal marry status in NYC for each borough",
+      y = "Proportion of number of birth",
+      x = "Year",
+      color = "Maternal marital status") +
+  theme_bw() +
+  scale_x_continuous(breaks=seq(2000, 2014, 5)) +
+  viridis::scale_color_viridis(discrete = TRUE) +
+  theme(legend.position = "bottom", plot.title = element_text(hjust = 0.5))
+```
+
+<img src="birth_data_xy2397_files/figure-markdown_github/unnamed-chunk-10-1.png" width="90%" style="display: block; margin: auto;" />
+
+The proportion of birth when maternal marital status is not married is always higher than that when status is married in all borough, except for Bronx.In Manhattan and Brooklyn the proportion of birth accounted by not-married mothers increased through 2000 to 2014.
+
+**Infant Sex**
+
+``` r
+# the birth trend in different sex in NYC for each boro
+infant_sex_plot_data %>%
+  group_by(year, borough) %>% 
+  mutate(percent = number/sum(number)) %>% 
+  ggplot(aes(x = year, y = percent, color = new_infant_sex)) +
+  geom_line() +
+  geom_point() +
+  facet_grid( ~ borough) +
+  labs(title = "Birth trend in different infant sex in NYC for each borough",
+      y = "Proportion of number of birth",
+      x = "Year",
+      color = "Infant sex") +
+  theme_bw() +
+  scale_x_continuous(breaks=seq(2000, 2014, 5)) +
+  viridis::scale_color_viridis(discrete = TRUE) +
+  theme(legend.position = "bottom", plot.title = element_text(hjust = 0.5))
+```
+
+<img src="birth_data_xy2397_files/figure-markdown_github/unnamed-chunk-11-1.png" width="90%" style="display: block; margin: auto;" />
+
+In each borough, the proportion of male infant and the proportion of female infant are very close to each other, flunctuating around 0.51 and 0.49. Surprisingly, we found that the proportion of male infant is always slightly larger than that of female infant.
+
+#### 5.2.2 Crossed Variables
+
+**Maternal Nativity × Maternal Age**
+
+``` r
+birth_nat_age_plot_data =
+  birth_data_un %>% 
+  select(year, cd, cd_name, borough, birthtot, nat1tot_a1, nat2tot_a1, nat1tot_a2, nat2tot_a2, nat1tot_a3, nat2tot_a3, nat1tot_a4, nat2tot_a4) %>%
+  gather(nativity_age, num, nat1tot_a1:nat2tot_a4) %>%
+  arrange(cd, nativity_age, year) %>% 
+  mutate(num = ifelse(is.na(num) & year != 2000, lag(num), num)) %>% 
+  mutate(num = ifelse(is.na(num) & year != 2000, lag(num, 2), num)) %>% 
+  mutate(num = ifelse(is.na(num), 0, num)) %>% 
+  separate(nativity_age, c("nat", "age"), sep = "tot_") %>%
+  mutate(new_nat = ifelse(nat == "nat1", "US born", "Foreign born"),
+         new_age = case_when(
+    age == "a1" ~ "< 20",
+    age == "a2" ~ "20 - 29",
+    age == "a3" ~ "30 - 39",
+    TRUE                      ~  "40 +"
+  )) %>% 
+  group_by(year, borough, new_age, new_nat) %>% 
+  summarise(number = sum(num))
+
+birth_nat_age_plot_data %>% 
+  group_by(year, new_nat, new_age) %>% 
+  summarise(number = sum(number)) %>%
+  group_by(year, new_nat) %>% 
+  mutate(percent = number/sum(number)) %>% 
+  ggplot(aes(x = year, y = percent, color = new_age)) +
+  geom_point() +
+  geom_line() +
+  facet_grid( ~ new_nat) + 
+  labs(title = "Birth trend in different maternal age in NYC for each maternal nativity",
+      y = "Proportion of number of  birth",
+      x = "Year",
+      color = "Maternal Nativity") +
+  theme_bw() +
+  scale_x_continuous(breaks=seq(2000, 2014, 5)) +
+  viridis::scale_color_viridis(discrete = TRUE) +
+  theme(legend.position = "bottom", plot.title = element_text(hjust = 0.5))
+```
+
+<img src="birth_data_xy2397_files/figure-markdown_github/unnamed-chunk-12-1.png" width="90%" style="display: block; margin: auto;" />
+
+Globally, mothers who are foreign born are younger than those who are US born. The proportions of birth in 20- and 40+ age group are similar between two maternal nativity group. However, The proportion of birth in 20-29 and 30-39 age group in Foreign born is larger than that in US born group.
