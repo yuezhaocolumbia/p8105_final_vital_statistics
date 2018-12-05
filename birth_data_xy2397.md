@@ -1,7 +1,47 @@
-Birth\_data
+Birth\_data\_report
 ================
 Xue Yang
 12/3/2018"
+
+This will detail how you completed your project, and should cover data collection and cleaning, exploratory analyses, alternative strategies, descriptions of approaches, and a discussion of results.
+
+• Motivation: Provide an overview of the project goals and motivation. • Related work: Anything that inspired you, such as a paper, a web site, or something we discussed in class. • Initial questions: What questions are you trying to answer? How did these questions evolve over the course of the project? What new questions did you consider in the course of your analysis? • Data: Source, scraping method, cleaning, etc. • Exploratory analysis: Visualizations, summaries, and exploratory statistical analyses. Justify the steps you took, and show any major changes to your ideas. • Additional analysis: If you undertake formal statistical analyses, describe these in detail • Discussion: What were your findings? Are they what you expect? What insights into the data can you make?
+
+<br>
+
+#### The anticipated data sources
+
+Data is from the nyc department of health.
+
+Datasets that will be used in this project are, but not limited to, the birth micro SAS Datasets \[Year(s)\] and death micro SAS Datasets \[Year(s)\] from National Vital Statistics System (time period is from 2000 to 2014). American Community Survey can be refered to for poverty data.
+
+Understanding the pattern of birth and death is of critical importance in identifying public health issue. In this study, we are interested in the cause of deaths and birth rate in New York City.
+
+We analysis the birth and death part respectively, and this is for the birth part.
+
+#### Motivation
+
+Provide an overview of the project goals and motivation.
+
+The pattern of birth is very important in the public health issue. The birth rate will directly influence the total population which may have effect on the calculation of the measures of disease occurrence. At the same time, birth rate may also be influenced by the maternal issue, such as maternal age, nativity and so on. So analysing on the birth data can help us identify the issue that may cause the increase or decrease of the birth counts, which can further help us to identify the construction of the total population.
+
+Meanwhile, analysis the birth data can help us identify the demographic characteristics. We can identify the proportion of the infant sex in the birth population, the maternal age, maternal marital status and so on.
+
+Moreover, we are also interested in explore if there are some relationship between different variables that may be associated with the birth data. Such as the infant birthweight and maternal age, maternal nativity and maternal age.
+
+We aim to analysis the following issues in the city of New York by boroughs from year 2000 to 2014. By comparing the trend of specific birth related variables gourped by borough, we can identidy some interesting trend related to public health issue.
+
+For the birth data, we would like to know the birth rate in New York by race, place of origin and borough and we would also plot the time trend of birth rate over the last ten years. Birth defect is also one of our interests. By exploring the dataset, we'd like to know whether a certain kind of birth defect is linked with certain maternal characteristics.
+
+#### Related work
+
+Anything that inspired you, such as a paper, a web site, or something we discussed in class.
+
+There is a website:<https://www1.nyc.gov/site/doh/about/about-doh.page> which contains a lot of stuffs about health issues in the city of New York. This is from New York City Department of Health and Mental Hygiene, which is one of the largest public health agencies in the world. Their work is really broad-ranging to protect and promote the health of 8 million diverse New Yorkers every day.
+
+From these website, we successful got the data we want about the death and birth in the city of New York for free. At the same time, we read the relative summary from this website to got a guide for our project.
+
+Moreover, from the computing club, we were introducted to create maps in ggplot, which is really cool. Combining with what we have learned about visualization and exploratory analysis in class, we are inspired to create some well-looled plot about the birth and death related stuff in the city of New York.
 
 #### Load and clean the data from community\_district source
 
