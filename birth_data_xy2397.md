@@ -78,8 +78,8 @@ Comparing with the three different aggregated dataset: Community District micro-
 ``` r
 # load and import community_district dataset
 birth_data = 
-  tibble(file_name = list.files(path = "./birth_data/community_district")) %>% 
-  mutate(output = purrr::map(str_c("./birth_data/community_district/", file_name), haven::read_sas)) %>%
+  tibble(file_name = list.files(path = "./data/birth_data/community_district")) %>% 
+  mutate(output = purrr::map(str_c("./data/birth_data/community_district/", file_name), haven::read_sas)) %>%
   unnest() %>% 
   separate(file_name, c("name", "year", "del"), sep = c(6, 8)) %>% 
   select(-name, -del) %>%
@@ -547,7 +547,7 @@ birth_nat_age_plot_data %>%
   labs(title = "Birth trend in different maternal age in NYC for each maternal nativity",
       y = "Proportion of number of  birth",
       x = "Year",
-      color = "Maternal Nativity") +
+      color = "Maternal age") +
   theme_bw() +
   scale_x_continuous(breaks=seq(2000, 2014, 5)) +
   viridis::scale_color_viridis(discrete = TRUE) +
