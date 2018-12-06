@@ -1161,5 +1161,11 @@ ggarrange(over_65_2, premature2, ncol=2, nrow=1, common.legend = TRUE, legend="b
 
 The cause of deaths in the more-than-65-year-old group was very different from that in the premature deaths group. Chronic diseas such as heart disease and hypertension a greater risk in aged people while higher proportion of premature death was due to homicide, psychoactive substance and HIV.
 
-6. Discussion and future work
+6. conclusion and future work
 -----------------------------
+
+In terms of cause of death, heart disease and malignant neoplasms were by far the top causes of death regardless of bourough of residency, gender, age and race. Difference among gender groups and year are small. One major change over time is that HIV has dropped out from the top ten leading cause of death. However, it kept remained in the top risk list for the Black and Hispanic. Difference among gender and age group, on the other hand, was relatively large. Chronic disease was the main risk for aged-people while HIV and homicide were only in the top cause of premature death.
+
+We were intended to merge the birth dataset with the death dataset and explore the relationship between maternal/neonatal death rate and maternal characteristics. However, maternal and neonatal death dataset required permission and therefore split into two relatively individual parts. In the birth data analysis, we observed an sure rising trend in advanced maternal age. This could impact on the maternal and infant mortality as well as infant defect (one of our future work). Other variables, such as maternal nativity, maternal status also varied across different borough.
+
+Other future work include stratifying each community districts in New York into according to porverty level and examining its associate with death and birth rate.
