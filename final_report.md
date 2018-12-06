@@ -19,6 +19,8 @@ In this project, we are interested in determining the mortality rate and leading
 2 **Related work and questions**
 --------------------------------
 
+We came acrossed some nationwide and worldwide data on leading cause of death this semester. This inspired us to explore the birth and death information in New York City and compare the data we generated with the nationwide and worldwide data. Initally, we planned to calculate birth and mortality rate in different age/race/origin of birth/group and build a regression model. However, we failed to found crossed data on population in a certain age/race/redidency group and decided to symply identidy leading cause of death by different demographic characteristics as well as maternal characteristics in different borough. A major issue in this project is the present of a large amount of missing data and how to deal with them.
+
 3. **Dataset**
 --------------
 
@@ -1158,3 +1160,6 @@ ggarrange(over_65_2, premature2, ncol=2, nrow=1, common.legend = TRUE, legend="b
 <img src="final_report_files/figure-markdown_github/unnamed-chunk-35-1.png" width="90%" />
 
 The cause of deaths in the more-than-65-year-old group was very different from that in the premature deaths group. Chronic diseas such as heart disease and hypertension a greater risk in aged people while higher proportion of premature death was due to homicide, psychoactive substance and HIV.
+
+6. Discussion and future work
+-----------------------------

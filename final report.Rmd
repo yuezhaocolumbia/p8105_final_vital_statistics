@@ -46,6 +46,9 @@ Motality data, for example, offers a snapshot of current health problems and kno
 In this project, we are interested in determining the mortality rate and leading causes of death in New York City and explore whether there is a differnt pattern by sex, race, age group, borough of residence and year. For the birth data, we would like to examine maternal factors such as maternal age, nativity and marrital status, and investigate how they changed over time or across different borough in New York City. 
 
 ##  2 **Related work and questions**
+We came acrossed some nationwide and worldwide data on leading cause of death this semester. This inspired us to explore the birth and death information in New York City and compare the data we generated with the nationwide and worldwide data. Initally, we planned to calculate birth and mortality rate in different age/race/origin of birth/group and build a regression model. However, we failed to found crossed data on population in a certain age/race/redidency group and decided to symply identidy leading cause of death by different demographic characteristics as well as maternal characteristics in different borough. A major issue in this project is the present of a large amount of missing data and how to deal with them.  
+
+
 ##  3. **Dataset** 
 Datasets used are the birth and death micro SAS Datasets [Year(s)] from National Vital Statistics System (2000 to 2014). Population data in each community district is obtained from NYC Open Data. Community District Dataset was chosen among three datasets for us to better examine the interested factors in each single year (the other two with 3 year and 5 year aggragate data respectively). Dataset used can be retrieved here. ("https://drive.google.com/drive/folders/1ufT6kp6GUqnZYCR2OHgY3UIuJpQcEG2d?usp=sharing")
 
@@ -1040,3 +1043,6 @@ ggarrange(over_65_2, premature2, ncol=2, nrow=1, common.legend = TRUE, legend="b
 ```
 
 The cause of deaths in the more-than-65-year-old group was very different from that in the premature deaths group. Chronic diseas such as heart disease and hypertension a greater risk in aged people while higher proportion of premature death was due to homicide, psychoactive substance and HIV.
+
+## 6. Discussion and future work
+
