@@ -10,9 +10,9 @@ Yi Xiao (yx2510) | Xue Yang (xy2397) | Kangkang Zhang (kz2334) | Yue Zhao (yz329
 
 Vital statistics including birth and mortality data is of critical importance in assesssing community health status. Birth rate, leading cause of death and mortality rate often serve as cornerstone in formulating public health policies.
 
-Death data, similarly, provide essential information from another prospective. Different maternal age and maternal nativity can be differently associated with offspring health outcome. Advanced maternal age, for instance, is linked with negative infant health as suggest by studies and infant health condition can also vary between US born and foreign born. Thus, understanding the pattern of distribution of those factors in different communities can indicate possible public health problems.
-
 Motality data, for example, offers a snapshot of current health problems and knowing the causes of death, especially the avoidable and treatable ones, helps us to establish intervention for better outcomes. By investigating the trend of a specific cause of death over time, we can also identify consistent risk in a specific groups and evaluate the effect of a certain public health policy. Disparity in mortality rate, premature death and cause of death in different race and gender can indicate socioeconomic inequility.
+
+Birth data, similarly, provide essential information from another prospective. Different maternal age and maternal nativity can be differently associated with offspring health outcome. Advanced maternal age, for instance, is linked with negative infant health as suggest by studies and infant health condition can also vary between US born and foreign born. Thus, understanding the pattern of distribution of those factors in different communities can indicate possible public health problems.
 
 In this project, we are interested in determining the mortality rate and leading causes of death in New York City and explore whether there is a differnt pattern by sex, race, age group, borough of residence and year. For the birth data, we would like to examine maternal factors such as maternal age, nativity and marrital status, and investigate how they changed over time or across different borough in New York City.
 
