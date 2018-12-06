@@ -6,114 +6,17 @@ Yi Xiao
 ``` r
 library(haven)
 library(dplyr)
-```
-
-    ## 
-    ## Attaching package: 'dplyr'
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     filter, lag
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     intersect, setdiff, setequal, union
-
-``` r
 library(tidyverse)
-```
-
-    ## ── Attaching packages ─────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──
-
-    ## ✔ ggplot2 3.0.0     ✔ readr   1.1.1
-    ## ✔ tibble  1.4.2     ✔ purrr   0.2.5
-    ## ✔ tidyr   0.8.1     ✔ stringr 1.3.1
-    ## ✔ ggplot2 3.0.0     ✔ forcats 0.3.0
-
-    ## ── Conflicts ────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
-    ## ✖ dplyr::filter() masks stats::filter()
-    ## ✖ dplyr::lag()    masks stats::lag()
-
-``` r
 library(stringi)
 library(ggplot2)
 library(ggmap)
 library(rgeos)
-```
-
-    ## rgeos version: 0.4-2, (SVN revision 581)
-    ##  GEOS runtime version: 3.6.1-CAPI-1.10.1 
-    ##  Linking to sp version: 1.3-1 
-    ##  Polygon checking: TRUE
-
-``` r
 library(maptools)
-```
-
-    ## Loading required package: sp
-
-    ## Checking rgeos availability: TRUE
-
-``` r
 library(geojsonio)
-```
-
-    ## 
-    ## Attaching package: 'geojsonio'
-
-    ## The following object is masked from 'package:base':
-    ## 
-    ##     pretty
-
-``` r
 library(viridis)
-```
-
-    ## Loading required package: viridisLite
-
-``` r
 library(plotly)
-```
-
-    ## 
-    ## Attaching package: 'plotly'
-
-    ## The following object is masked from 'package:ggmap':
-    ## 
-    ##     wind
-
-    ## The following object is masked from 'package:ggplot2':
-    ## 
-    ##     last_plot
-
-    ## The following object is masked from 'package:stats':
-    ## 
-    ##     filter
-
-    ## The following object is masked from 'package:graphics':
-    ## 
-    ##     layout
-
-``` r
 library(ggpubr)
 ```
-
-    ## Loading required package: magrittr
-
-    ## 
-    ## Attaching package: 'magrittr'
-
-    ## The following object is masked from 'package:ggmap':
-    ## 
-    ##     inset
-
-    ## The following object is masked from 'package:purrr':
-    ## 
-    ##     set_names
-
-    ## The following object is masked from 'package:tidyr':
-    ## 
-    ##     extract
 
 1. load the data
 ================
@@ -141,21 +44,6 @@ cd_data = merge(cd_data, community_district , by = "community_district")
 cd_number2 = c(201:212, 301: 318, 101:112, 401:414, 501:503)
 pop_data2 = read_csv("./data/New_York_City_Population_By_Community_Districts 16.09.03.csv") %>%
  janitor::clean_names() 
-```
-
-    ## Parsed with column specification:
-    ## cols(
-    ##   Borough = col_character(),
-    ##   `CD Number` = col_integer(),
-    ##   `CD Name` = col_character(),
-    ##   `1970 Population` = col_integer(),
-    ##   `1980 Population` = col_integer(),
-    ##   `1990 Population` = col_integer(),
-    ##   `2000 Population` = col_integer(),
-    ##   `2010 Population` = col_integer()
-    ## )
-
-``` r
 pop_data2 = cbind(cd_number2, pop_data2) %>%
   select(borough, cd_number2, cd_name, x2000_population, x2010_population) %>%
   rename("cd_number" = "cd_number2")
@@ -328,10 +216,12 @@ age_death_data3 = replace_cd(age_death_data3)
 3. data analysis
 ================
 
-#### 3.1 crude mortality rate
+#### 3.1 mortality rate and leading cause of death in NYC
+
+##### crude mortality rate across 59 community districts in NYC
 
 ``` r
-# 14-year average crude mortality rate in each community district in New York City
+# 15-year average crude mortality rate in each community district in New York City
 cd_death_rate  = total_death_data %>%
   group_by(borough, cd_name, year) %>%
   summarise(total_cd_death = sum(number, na.rm = TRUE), population = mean(population), cd_number = mean(as.numeric(cd_number))) %>%
@@ -346,12 +236,17 @@ cd_death_rate %>%
    geom_bar(stat = "identity") +
    labs(title = "10-year average crude mortality rate in each community district in New York City",
              x = "Community District",
-             y = "Average Motality Rate") +
+             y = "Average Motality Rate",
+        caption = "Source: vital statistics database: 2000-2014") +
         theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
   viridis::scale_fill_viridis(discrete = TRUE) 
 ```
 
-![](death_data_files/figure-markdown_github/unnamed-chunk-9-1.png) We can see that the mortality rate are higher on average in Bronx and Brooklyn. The boroughs with highest mortality are Coney Island in Brooklyn and Riverdale in Bronx. The areas with more wealthy people like Manhattan and Queens have a relative low mortality rate overall.
+![](death_data_files/figure-markdown_github/unnamed-chunk-9-1.png)
+
+We can see that the mortality rate were higher on average in Bronx and Brooklyn. Besides, all the three community districts in Staten Island had high mortality rate, which could be due to a higher proportion of aged population. The boroughs with highest mortality were Coney Island in Brooklyn and Riverdale in Bronx. Average death rates were lowest in Battery park, followed by Elmuhurst in Quees. The areas with more wealthy people like Manhattan and Queens have a relative low mortality rate overall.
+
+##### map of crude mortality rate in NYC
 
 ``` r
 URL <- "http://services5.arcgis.com/GfwWNkhOj9bNBqoJ/arcgis/rest/services/nycd/FeatureServer/0/query?where=1=1&outFields=*&outSR=4326&f=geojson"
@@ -408,7 +303,9 @@ cd_death_map
 
 ![](death_data_files/figure-markdown_github/unnamed-chunk-10-1.png)
 
-Geographically speaking, the map shows a very interesting pattern that the far north and the far south part of New York are having the highest mortality rates. The middle part of New York is having a lower mortality rate. But this can also be confounded by the income level of the people living in those areas. Because the people live in the middle part usually have a higher income, they can afford the housing in the central area which are more expensive than the surrounding area.
+Geographically speaking, the map shows a very interesting pattern that the far north and the far south part of New York are having the highest mortality rates. The middle part of New York is having a lower mortality rate. This is conincident with New York income level where people live in the middle part usually have a higher income while neighbourhood in Staten Island share a high proportion of aged people.
+
+##### leading cause of death in 5 borough in NYC
 
 ``` r
 # cause-specific mortality rate in each borough
@@ -427,7 +324,7 @@ specific_death_rate %>%
    labs(title = "14-year average cause-specific crude mortality rate in each borough",
              x = "Cause of Death",
              y = "Cause-specific Mortality Rate",
-              caption = "Source: vital statistics database: 2004-2014") +
+              caption = "Source: vital statistics database: 2000-2014") +
         theme(axis.text.x = element_text(angle=90, size = 8, vjust=0.6)) +
         theme(legend.position="bottom", 
               legend.key.size = unit(.1, "in")) +
@@ -437,7 +334,9 @@ specific_death_rate %>%
 
 ![](death_data_files/figure-markdown_github/unnamed-chunk-11-1.png)
 
-We can now see that the disease of the heart is the leading cause of deaths in all areas. Cancer is the second most common cause of deaths in all areas. Overall, in terms of Cause of Deaths distribution across areas, we do not see a big difference in the structure of the cause of deaths.
+In this plot, caused of death was ordered by the cause specific mortality rate across New York City rather than each borough. We can see that the disease of the heart was the leading cause of deaths in all areas followed by malignant neoplasms as the second leading cause of mortality in each neighbourhood. Heart disease-related mortality rate was particularly high in Staten Island while death rate by HIV and diabetes mellites is particularly high in Bronx. Queens, which holds a higher proportion of Asians, was feature with high colon cancer risk. Overall, in terms of Cause of Deaths distribution across areas, we do not see a big difference in the structure of the cause of deaths.
+
+##### trend of mortality rate in NYC from 2000 to 2010
 
 ``` r
 # annual mortality rate in New York City from 2000 to 2010
@@ -457,14 +356,16 @@ year_death_rate %>%
   viridis::scale_color_viridis(discrete = TRUE)
 ```
 
-![](death_data_files/figure-markdown_github/unnamed-chunk-12-1.png) From a longitudinal perspective, the mortality rate goes down as the years go by. The mortality rate for Brooklyn, Manhattan and Bronx are clustered together in terms of years. Staten Island has a higher mortality rate overall and Queens has the lowest mortality rate. There is a drop in mortality rates between 2006 and 2007. In 2010, there is a second drop in mortality rates.
+![](death_data_files/figure-markdown_github/unnamed-chunk-12-1.png)
+
+From a longitudinal perspective, the mortality rate went down as the years go by. The mortality rate for Brooklyn, Manhattan and Bronx were clustered together in terms of years. Staten Island had a higher mortality rate overall and Queens had the lowest mortality rate. There was a drop in mortality rates between 2006 and 2007. In 2010, there was a second drop in mortality rates.
 
 ``` r
 year_cs_death_ny = total_death_data %>%
   group_by(year, cause_of_death) %>%
   summarise(specific_death_number = sum(number, na.rm = TRUE), total_population = sum(population)) %>%
   mutate(motality_rate = specific_death_number/total_population) %>%
-filter(year %in% c("2000", "2006", "2012", "2014")) %>%
+filter(year %in% c("2000", "2006", "2013", "2014")) %>%
   group_by(year) %>%
   top_n(n = 10, wt = motality_rate) 
   
@@ -508,14 +409,14 @@ filter(year == 2006) %>%
 
 yr12 = 
 lead_death3 %>% 
-filter(year == 2012) %>%
+filter(year == 2013) %>%
   ggplot(aes(reorder(x = cause_of_death, br_rate), y = br_rate, fill = borough)) +
   geom_bar(stat = "identity") + 
   theme_bw() +
    theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
    labs(x = "Cause of death", 
          y = "Crude mortality rate", 
-         title = "leading cause of death in 2012") +
+         title = "leading cause of death in 2013") +
   coord_flip()  +
   viridis::scale_fill_viridis(discrete = TRUE) 
 
@@ -532,46 +433,33 @@ filter(year == 2014) %>%
   coord_flip()  +
   viridis::scale_fill_viridis(discrete = TRUE) 
 
-yr00
+
+ggarrange(yr00, yr06, yr12, yr14, ncol=2, nrow=2, common.legend = TRUE, legend="bottom")
 ```
 
 ![](death_data_files/figure-markdown_github/unnamed-chunk-13-1.png)
 
-``` r
-yr06
-```
-
-![](death_data_files/figure-markdown_github/unnamed-chunk-13-2.png)
-
-``` r
-yr12
-```
-
-![](death_data_files/figure-markdown_github/unnamed-chunk-13-3.png)
-
-``` r
-yr14
-```
-
-![](death_data_files/figure-markdown_github/unnamed-chunk-13-4.png)
+Heart disease and malignant neoplasms (cancer) were by far the most leading cause of death in our selected years. The leading cause of death basicly remained unchanged from 2032 to 2014 with a only a change in the 10th place where hypertension is replaced by cancer of breast. HIV dropped out from the top ten while breast cancer emerged as new major causes.
 
 ``` r
 # death by gender in each borough by year
+# get the leading cause of each gender
 gender_death_cause = gender_death_data2 %>%
   group_by(gender, cause_of_death) %>%
-  summarise(average_death = sum(number_cs_boro_gdr)/11) %>%
+  summarise(average_death = sum(number_cs_boro_gdr)/15) %>%
   top_n(n = 10, wt = average_death) %>%
   arrange(gender, desc(average_death))
 
-gender_death_cause2 = gender_death_data2 %>%
-  group_by(gender, cause_of_death, borough) %>%
-  summarise(average_death_br = sum(number_cs_boro_gdr)/11) %>%
-  top_n(n = 10, wt = average_death_br) %>%
-  arrange(gender, desc(average_death_br))
+# filter out this cause from the dataset and calculate number of death
+gender_death_cause2 = merge(gender_death_cause, gender_death_data2) %>%
+   group_by(gender, cause_of_death, borough) %>%
+  summarise(average_death = sum(number_cs_boro_gdr)/15) 
+   
+   
 
 female1 = gender_death_cause2 %>% 
   filter(gender == "female") %>%
-  ggplot(aes(x = reorder(cause_of_death, average_death_br), y = average_death_br, fill = borough)) +
+  ggplot(aes(x = reorder(cause_of_death, average_death), y = average_death, fill = borough)) +
   geom_bar(stat = "identity") +
 
   labs(x = "Cause of death", 
@@ -580,11 +468,12 @@ female1 = gender_death_cause2 %>%
 theme_bw()+
    theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
   
-  viridis::scale_fill_viridis(discrete = TRUE) 
+  viridis::scale_fill_viridis(discrete = TRUE) +
+  coord_flip()
 
 male1 = gender_death_cause2 %>% 
   filter(gender == "male") %>%
-  ggplot(aes(x = reorder(cause_of_death, average_death_br), y = average_death_br, fill = borough)) +
+  ggplot(aes(x = reorder(cause_of_death, average_death), y = average_death, fill = borough)) +
   geom_bar(stat = "identity" ) +
   ylim(c(0, 10000)) +
   
@@ -593,16 +482,15 @@ theme_bw()+
    labs(x = "Cause of death", 
          y = "Number of death", 
          title = "leading cause of death for male") +
-  viridis::scale_fill_viridis(discrete = TRUE) 
+  viridis::scale_fill_viridis(discrete = TRUE) +
+  coord_flip()
 
 ggarrange(male1, female1, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
 ```
 
-    ## Warning: Removed 1 rows containing missing values (geom_bar).
-
-    ## Warning: Removed 1 rows containing missing values (geom_bar).
-
 ![](death_data_files/figure-markdown_github/unnamed-chunk-14-1.png)
+
+Although heart diseas and malignant neoplasms remained the most two major cause of death in two gender, male and female showed very different patern in cause of death. Breast cancer, obviously, was specific to women while prostate cancer was specific to men. We can see that breast cancer ranked the 6th leading cause of female death, however, the risk was diluted in the whole population. Lower respiratory disease was more of a risk than male compared to female, which could be expained by a larger proportion of smoking population in male. Beside, HIV was a greater issue for male and cancer of colon was unique in top ten causes for female.
 
 ``` r
 gender_death_data2 %>%
@@ -619,7 +507,9 @@ gender_death_data2 %>%
    theme(axis.text.x = element_text(angle=90, vjust=0.6))
 ```
 
-![](death_data_files/figure-markdown_github/unnamed-chunk-15-1.png) The number of deaths for female is overall greater than the number of deaths for male. The curves for the two groups are parallel to each other over time. We assume there is some difference between men and women in terms of the number of deaths. But the difference was not due to the change of time.
+![](death_data_files/figure-markdown_github/unnamed-chunk-15-1.png)
+
+The number of deaths for female was overall greater than the number of deaths for male. The curves for the two groups were parallel to each other over time. We assume there is some difference between men and women in terms of the number of deaths but the difference was not due to the change of time. One possible explanation was age-population was disproportionately high in femal group since female usually has longer life expectancy.
 
 ``` r
 race_death_data2 = race_death_data2 %>%
@@ -646,7 +536,7 @@ race_death_cd = merge(race_death_data2, race_death_cause) %>%
   group_by(race, cause_of_death, borough) %>%
   summarise(race_ds_br = sum(borough_race_death)/10) 
 
-race_death_cd %>% 
+hispanic = race_death_cd %>% 
   filter(race == "Hispanic") %>%
   ggplot(aes(x = reorder(cause_of_death, race_ds_br), y = race_ds_br, fill = borough)) +
   geom_bar(stat = "identity") +
@@ -655,14 +545,13 @@ race_death_cd %>%
          y = "Number of death", 
          title = "leading cause of death for Hispanic") + 
 theme_bw() +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-  viridis::scale_fill_viridis(discrete = TRUE) 
+   theme(axis.text.x = element_text(angle=90, vjust=0.6, face = "bold")) +
+  viridis::scale_fill_viridis(discrete = TRUE)  +
+  coord_flip()
 ```
 
-![](death_data_files/figure-markdown_github/unnamed-chunk-17-1.png)
-
 ``` r
-race_death_cd %>% 
+asian = race_death_cd %>% 
   filter(race == "Asian Non-Hispanic") %>%
   ggplot(aes(x = reorder(cause_of_death, race_ds_br), y = race_ds_br, fill = borough)) +
   geom_bar(stat = "identity") +
@@ -671,14 +560,13 @@ race_death_cd %>%
          y = "Number of death", 
          title = "leading cause of death for Asian") +
   theme_bw()+
-   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-  viridis::scale_fill_viridis(discrete = TRUE) 
+   theme(axis.text.x = element_text(angle=90, vjust=0.6, face = "bold")) +
+  viridis::scale_fill_viridis(discrete = TRUE) +
+  coord_flip()
 ```
 
-![](death_data_files/figure-markdown_github/unnamed-chunk-18-1.png)
-
 ``` r
-race_death_cd %>% 
+white = race_death_cd %>% 
   filter(race == "White Non-Hispanic") %>%
   ggplot(aes(x = reorder(cause_of_death, race_ds_br), y = race_ds_br, fill = borough)) +
   geom_bar(stat = "identity") +
@@ -687,13 +575,13 @@ race_death_cd %>%
          y = "Number of death", 
          title = "leading cause of death for White") + 
 theme_bw()+
-   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-  viridis::scale_fill_viridis(discrete = TRUE) 
+   theme(axis.text.x = element_text(angle=90, vjust=0.6, face = "bold")) +
+  viridis::scale_fill_viridis(discrete = TRUE)  +
+  coord_flip()
 ```
 
-![](death_data_files/figure-markdown_github/unnamed-chunk-19-1.png)
-
 ``` r
+black = 
 race_death_cd %>% 
   filter(race == "Black Non-hispanic") %>%
   ggplot(aes(x = reorder(cause_of_death, race_ds_br), y = race_ds_br, fill = borough)) +
@@ -703,11 +591,16 @@ race_death_cd %>%
          y = "Number of death", 
          title = "leading cause of death for Black") + 
 theme_bw() +
-   theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-  viridis::scale_fill_viridis(discrete = TRUE) 
+   theme(axis.text.x = element_text(angle=90, vjust=0.6, face = "bold")) +
+  viridis::scale_fill_viridis(discrete = TRUE) +
+  coord_flip()
+
+ggarrange(hispanic, asian, white, black, ncol=2, nrow=2, common.legend = TRUE, legend="bottom")
 ```
 
 ![](death_data_files/figure-markdown_github/unnamed-chunk-20-1.png)
+
+Different race has similar cause of death pattern with heart disease and malignant neoplasms ranked as the leading two causes of death. HIV only appeared in the Hispanic and the Black group while breast cancer is a leading cause in the White only. Accident except poisoning was ranked as 10th fro Asians and Hispanics but not in the leading cause list for the other two group.
 
 ``` r
 race_death_data2 %>%
@@ -742,6 +635,8 @@ age_death_cause = age_death_cause %>%
   filter(age_group == "Premature Death" | age_group == ">65 age death")
 ```
 
+The plotted 15 years witnessed a dramatic drop in tems of death number in the White while this statistics kept stable in the Black and Hispanic. A slight rise can be observed in the Asia group, however, this could be confounded by a rapid increase in Asian population. Since a drop in the White death number was conincident with a dropped in HIV related death, and meanwhile HIV remained one of those leading caused in the Hispanic and Black, we assumed that the decrease in the White death was partly due to decrease in HIV-caused death.
+
 ``` r
 age_death_data3 = merge(age_death_data3, age_death_cause) %>%
   group_by(cause_of_death, age_group, borough) %>%
@@ -756,7 +651,8 @@ over_65_2 = age_death_data3 %>%
          title = "leading cause of death for over 65 year old group ") + 
 theme_bw() +
    theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-  viridis::scale_fill_viridis(discrete = TRUE)  
+  viridis::scale_fill_viridis(discrete = TRUE)  +
+  coord_flip()
 
 
 premature2 = age_death_data3 %>%
@@ -768,10 +664,13 @@ premature2 = age_death_data3 %>%
          title = "leading cause of death for premature death") + 
 theme_bw()+
    theme(axis.text.x = element_text(angle=90, vjust=0.6)) +
-  viridis::scale_fill_viridis(discrete = TRUE) 
+  viridis::scale_fill_viridis(discrete = TRUE) +
+  coord_flip()
 
 
 ggarrange(over_65_2, premature2, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
 ```
 
 ![](death_data_files/figure-markdown_github/unnamed-chunk-23-1.png)
+
+The cause of deaths in the more-than-65-year-old group was very different from that in the premature deaths group. Chronic diseas such as heart disease and hypertension a greater risk in aged people while higher proportion of premature death was due to homicide, psychoactive substance and HIV.
